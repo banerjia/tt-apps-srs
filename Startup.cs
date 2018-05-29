@@ -6,6 +6,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql;
+using Nest;
+using Elasticsearch.Net;
+using tt_apps_srs.Models;
 
 namespace tt_apps_srs
 {
@@ -21,7 +26,17 @@ namespace tt_apps_srs
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSession();
             services.AddMvc();
+            services.AddSingleton<IAuditor>( s => new Auditor(Configuration.GetConnectionString("DefaultESConnection")));
+            services.AddEntityFrameworkMySql();
+            services.AddDbContextPool<tt_apps_srs_db_context>((serviceProvider, options) =>
+            {
+                options.UseMySql(Configuration.GetConnectionString("DefaultDbConnection"));
+                options.UseInternalServiceProvider(serviceProvider);
+            });
+            
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -35,9 +50,9 @@ namespace tt_apps_srs
             {
                 app.UseExceptionHandler("/Error");
             }
-
+            
             app.UseStaticFiles();
-
+            app.UseSession();
             app.UseMvc();
         }
     }
