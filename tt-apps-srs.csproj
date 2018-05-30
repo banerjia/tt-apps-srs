@@ -13,8 +13,15 @@
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.0" />
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.4" />
+    <DotNetCliToolReference Include="Microsoft.DotNet.Watcher.Tools" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Migrations\" />
+    <Folder Include="Pages\Tenant\" />
+    <Folder Include="Pages\Retailer\" />
+    <Folder Include="Pages\Store\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Migrations\20180529184843_InitialDatabase.cs" />
   </ItemGroup>
 </Project>

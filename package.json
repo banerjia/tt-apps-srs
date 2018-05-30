@@ -1,0 +1,22 @@
+{
+  "name": "tt-apps-srs",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/banerjia/tt-apps-srs.git"
+  },
+  "author": "Abhishek Banerji",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/banerjia/tt-apps-srs/issues"
+  },
+  "homepage": "https://github.com/banerjia/tt-apps-srs#readme",
+  "dependencies": {
+    "@json-editor/json-editor": "^1.0.0"
+  }
+}

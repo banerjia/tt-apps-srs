@@ -7,9 +7,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Newtonsoft.Json;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 
 namespace tt_apps_srs.Models
 {
@@ -22,23 +22,50 @@ namespace tt_apps_srs.Models
         }
 
         public DbSet<Tenant> Tenants {get; set;}
-        public DbSet<TenantProperty> TenantProperties {get;set;}
-
+        public DbSet<Retailer> Retailers {get;set;}
+        public DbSet<TenantRetailer> TenantRetailers { get; set; }
         public DbSet<Store> Stores {get;set;}
-
         public DbSet<TenantStore> TenantStores { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
 
             modelBuilder.Entity<Tenant>()
-                .HasIndex(i => i.UrlCode)
-                .IsUnique()
-                .HasName("IX_Tenant_UrlCode");
+                        .HasIndex(i => i.UrlCode)
+                        .IsUnique()
+                        .HasName("IX_Tenant_UrlCode");
+
             modelBuilder.Entity<Tenant>()
-                .HasIndex(i => i.Name)
-                .IsUnique()
-                .HasName("IX_Tenant_Name");
+                        .Property(p => p.Active)
+                        .HasDefaultValue(true);
+
+            modelBuilder.Entity<Retailer>()
+                        .Property(p => p.Active)
+                        .HasDefaultValue(true);
+
+            modelBuilder.Entity<TenantRetailer>()
+                        .Property(p => p.Active)
+                        .HasDefaultValue(true);
+
+            modelBuilder.Entity<TenantRetailer>()
+                        .HasIndex(i => new { i.Active, i.TenantId })
+                        .HasName("IX_TenantRetailer_TenantActive");
+
+            modelBuilder.Entity<Store>()
+                        .Property(p => p.Active)
+                        .HasDefaultValue(true);
+
+            modelBuilder.Entity<Store>()
+                        .Property(p => p.Country)
+                        .HasDefaultValue("US");
+
+            modelBuilder.Entity<TenantStore>()
+                        .Property(p => p.Active)
+                        .HasDefaultValue(true);
+
+            modelBuilder.Entity<TenantStore>()
+                        .HasIndex(i => new { i.Active, i.TenantId })
+                        .HasName("IX_TenantStore_TenantActive");
         }
 
         #region Auditing Mechanism
@@ -133,41 +160,82 @@ namespace tt_apps_srs.Models
     }
 
 
-
     #region Model Definitions
 
     public class Tenant 
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
         [Required, MaxLength(128)]
         public string Name {get;set;}
+
         [Required, MaxLength(64)]
         public string UrlCode { get; set; }
+
+        public JsonObject<Dictionary<string,object>> Properties { get; set; }
+
+        [Required]
+        public bool Active { get; set; }
     }
 
-    public class TenantProperty
+    public class Retailer
+    {
+        public Guid Id { get; set; }
+
+        [Required, MaxLength(512)]
+        public string Name
+        { get; set; }
+
+        [Required]
+        public bool Active { get; set; }
+    }
+
+    public class TenantRetailer
     {
         public int Id { get; set; }
 
         [ForeignKey("Tenant")]
         public Guid TenantId { get; set; }
+
+        [ForeignKey("Retailer")]
+        public Guid RetailerId { get; set; }
+
+        public JsonObject<Dictionary<string, object>> Properties { get; set; }
+
+        [Required]
+        public bool Active { get; set; }
     }
 
     public class Store
     {
         public Guid Id { get; set; }
+
         [Required, MaxLength(255)]
         public string Name { get; set; }
+
         [Required, MaxLength(1024)]
-        public string add_ln_1 { get; set; }
+        public string Addr_Ln_1 { get; set; }
+
         [MaxLength(512)]
-        public string addr_ln_2 {get;set;}
+        public string Addr_Ln_2 {get;set;}
+
         [Required, MaxLength(128)]
         public string City { get; set; }
+
         [Required, MaxLength(4)]
         public string State { get; set; }
+
+        [Required, MaxLength(4)]
+        public string Country { get; set; }
+
+        public float Latitude { get; set; }
+
+        public float Longitude { get; set; }
+
+        [Required]
+        public bool Active{ get; set; }
     }
+
 
     public class TenantStore
     {
@@ -178,6 +246,13 @@ namespace tt_apps_srs.Models
 
         [ForeignKey("Store")]
         public Guid StoreId { get; set; }
+
+        public JsonObject<Dictionary<string, object>> Properties { get; set; }
+
+        [Required]
+        public bool Active { get; set; }
     }
+
+
 #endregion
 }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Elasticsearch.Net;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Nest;
 
@@ -21,16 +19,6 @@ namespace tt_apps_srs.Models
 
             client = new ElasticClient(connectionConfiguration);
 
-        }
-
-        public Auditor()
-        {
-            var connectionConfiguration = new ConnectionSettings(new Uri("http://127.0.0.1:9200"))
-                                        .DefaultMappingFor<Audit>(i => i
-                                                                        .IndexName("tt-apps-srs")
-                                                                        .TypeName("db_audit"));
-
-            client = new ElasticClient(connectionConfiguration);
         }
 
         public async void Create(Audit audit)

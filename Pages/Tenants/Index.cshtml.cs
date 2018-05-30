@@ -4,9 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using tt_apps_srs.Models;
 
-namespace tt_apps_srs.Pages
+namespace tt_apps_srs.Pages.Tenant
 {
     public class IndexModel : PageModel
     {
@@ -15,17 +16,16 @@ namespace tt_apps_srs.Pages
         public IndexModel(tt_apps_srs_db_context db)
         {
             _db = db;
-            var t = db.Tenants.First();
-            t.UrlCode = "test_es_Z";
-
-            _db.Attach(t).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-
-            _db.SaveChangesAsync();
         }
 
-        public void OnGet()
-        {
+        public IList<tt_apps_srs.Models.Tenant> Tenants { get; set; }
 
+
+        public async Task<IActionResult> OnGetAsync()
+        {
+            Tenants = await _db.Tenants.Where(q => q.Active).ToListAsync();
+
+            return Page();
         }
     }
 }
