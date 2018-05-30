@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json;
 using tt_apps_srs.Models;
 
-namespace tt_apps_srs.Pages.Tenant
+namespace tt_apps_srs.Pages.Client
 {
     public class CreateModel : PageModel
     {
@@ -19,21 +19,21 @@ namespace tt_apps_srs.Pages.Tenant
         }
 
         [BindProperty]
-        public TenantCreateModel Tenant {get;set;}
+        public ClientCreateModel Client {get;set;}
 
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> OnPostAsync(TenantCreateModel tenant)
+        public async Task<IActionResult> OnPostAsync(ClientCreateModel tenant)
         {
             if (!ModelState.IsValid)
                 return Page();
 
-            tt_apps_srs.Models.Tenant addTenant = new tt_apps_srs.Models.Tenant{
+            tt_apps_srs.Models.Client addClient = new tt_apps_srs.Models.Client{
                 Name = tenant.Name,
                 UrlCode = tenant.UrlCode,
                 Properties =  tenant.Properties
             };
 
-            _db.Tenants.Add(addTenant);
+            _db.Clients.Add(addClient);
             await _db.SaveChangesAsync();
 
             return RedirectToPage("./Index");
@@ -41,19 +41,19 @@ namespace tt_apps_srs.Pages.Tenant
     
     }
 
-    public class TenantCreateModel
+    public class ClientCreateModel
     {
-        public TenantCreateModel()
+        public ClientCreateModel()
         {
         }
 
         [BindProperty]
-        [DisplayName("Tenant Name")]
+        [DisplayName("Client Name")]
         [Required]
         public string Name { get; set; }
 
         [BindProperty]
-        [DisplayName("Tenant Url Part")]
+        [DisplayName("Client Url Part")]
         [Required]
         public string UrlCode { get; set; }
 

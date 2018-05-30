@@ -1,0 +1,56 @@
+﻿@page
+@model CreateModel
+@{
+    ViewData["Title"] = "Add Client";
+}
+
+<form method="post" id="frm_CreateClient">
+    <div asp-validation-summary="All"></div>
+    <div class="row">
+        <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12">
+            <button class="btn btn-success" id="form_submit">Add Client</button>
+            <a asp-page="./Index" type="button" class="btn btn-default">Cancel</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12"><label asp-for="Client.Name">Name</label></div>
+        <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12"><input asp-for="Client.Name" /></div>
+    </div>
+    <div class="row">
+        <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12"><label asp-for="Client.UrlCode">Url Part</label></div>
+        <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12"><input asp-for="Client.UrlCode" /></div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <div id="editor_holder"></div>
+            <input type="hidden" asp-for='Client.Properties'/>
+        </div>
+    </div>
+</form>
+@section Scripts
+{
+    <script src="~/js/jsoneditor.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        var element = document.getElementById("editor_holder");
+        var editor = new JSONEditor(element, {
+            theme: "bootstrap3",
+            disable_edit_json: true,
+            disable_collapse: true,
+            schema: {
+                "title": "Properties",
+                "type": "object",
+                "properties":{
+                    "is_root":{
+                        "type": "boolean",
+                        "title": "Root Client",
+                        "default": false,
+                        "format": "checkbox",
+                    }
+                }
+            }
+        });
+        document.getElementById("form_submit").addEventListener("click", function(){
+            document.getElementById("Client_Properties").value = JSON.stringify(editor.getValue());
+        });
+    </script>
+}

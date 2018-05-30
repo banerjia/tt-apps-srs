@@ -21,51 +21,96 @@ namespace tt_apps_srs.Models
             _auditor = this.GetService<IAuditor>();
         }
 
-        public DbSet<Tenant> Tenants {get; set;}
+        public DbSet<Client> Clients {get; set;}
         public DbSet<Retailer> Retailers {get;set;}
-        public DbSet<TenantRetailer> TenantRetailers { get; set; }
+        public DbSet<ClientRetailer> ClientRetailers { get; set; }
         public DbSet<Store> Stores {get;set;}
-        public DbSet<TenantStore> TenantStores { get; set; }
-        
+        public DbSet<ClientStore> ClientStores { get; set; }
+        public DbSet<ClientProduct> ClientProducts { get; set; }
+        public DbSet<ClientProductStore> ClientProductStores { get; set; }
+        public DbSet<ClientProductRetailer> ClientProductRetailers { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
 
-            modelBuilder.Entity<Tenant>()
+            #region Client
+            modelBuilder.Entity<Client>()
                         .HasIndex(i => i.UrlCode)
                         .IsUnique()
-                        .HasName("IX_Tenant_UrlCode");
+                        .HasName("IX_Client_UrlCode");
 
-            modelBuilder.Entity<Tenant>()
+            modelBuilder.Entity<Client>()
                         .Property(p => p.Active)
                         .HasDefaultValue(true);
+            #endregion
 
+            #region Retailer
             modelBuilder.Entity<Retailer>()
                         .Property(p => p.Active)
                         .HasDefaultValue(true);
+            modelBuilder.Entity<Retailer>()
+                        .HasIndex(i => new { i.Active })
+                        .HasName("IX_Retailer_Active");
+            #endregion
 
-            modelBuilder.Entity<TenantRetailer>()
+            #region ClientRetailer
+            modelBuilder.Entity<ClientRetailer>()
                         .Property(p => p.Active)
                         .HasDefaultValue(true);
 
-            modelBuilder.Entity<TenantRetailer>()
-                        .HasIndex(i => new { i.Active, i.TenantId })
-                        .HasName("IX_TenantRetailer_TenantActive");
+            modelBuilder.Entity<ClientRetailer>()
+                        .HasIndex(i => new { i.Active, i.ClientId })
+                        .HasName("IX_ClientRetailer_ClientActive");
+            #endregion
 
-            modelBuilder.Entity<Store>()
-                        .Property(p => p.Active)
-                        .HasDefaultValue(true);
-
+            #region Store
             modelBuilder.Entity<Store>()
                         .Property(p => p.Country)
                         .HasDefaultValue("US");
 
-            modelBuilder.Entity<TenantStore>()
+            modelBuilder.Entity<Store>()
                         .Property(p => p.Active)
                         .HasDefaultValue(true);
 
-            modelBuilder.Entity<TenantStore>()
-                        .HasIndex(i => new { i.Active, i.TenantId })
-                        .HasName("IX_TenantStore_TenantActive");
+            modelBuilder.Entity<Store>()
+                        .HasIndex(i => new { i.Active, i.RetailerId })
+                        .HasName("IX_Store_RetailerActive");
+            #endregion
+
+            #region ClientStore
+            modelBuilder.Entity<ClientStore>()
+                        .HasIndex(i => new { i.Active, i.ClientId })
+                        .HasName("IX_ClientStore_ClientActive");
+
+            modelBuilder.Entity<ClientStore>()
+                        .Property(p => p.Active)
+                        .HasDefaultValue(true);
+            #endregion
+
+            #region ClientProduct
+            modelBuilder.Entity<ClientProduct>()
+                        .HasIndex(i => new { i.Active, i.ClientId })
+                        .HasName("IX_ClientProduct_ClientActive");
+
+            modelBuilder.Entity<ClientStore>()
+                        .Property(p => p.Active)
+                        .HasDefaultValue(true);
+            #endregion
+
+            #region ClientProductStore
+            modelBuilder.Entity<ClientProductStore>()
+                        .HasKey(k => new { k.StoreId, k.ClientProductId })
+                        .HasName("PK_ClientProductStore");
+
+            #endregion
+
+            #region ClientProductRetailer
+            modelBuilder.Entity<ClientProductRetailer>()
+                        .HasKey(k => new { k.RetailerId, k.ClientProductId })
+                        .HasName("PK_ClientProductRetailer");
+
+            #endregion
         }
 
         #region Auditing Mechanism
@@ -162,7 +207,7 @@ namespace tt_apps_srs.Models
 
     #region Model Definitions
 
-    public class Tenant 
+    public class Client 
     {
         public int Id { get; set; }
 
@@ -183,19 +228,19 @@ namespace tt_apps_srs.Models
         public Guid Id { get; set; }
 
         [Required, MaxLength(512)]
-        public string Name
-        { get; set; }
+        public string Name{ get; set; }
+
 
         [Required]
         public bool Active { get; set; }
     }
 
-    public class TenantRetailer
+    public class ClientRetailer
     {
         public int Id { get; set; }
 
-        [ForeignKey("Tenant")]
-        public Guid TenantId { get; set; }
+        [ForeignKey("Client")]
+        public int ClientId { get; set; }
 
         [ForeignKey("Retailer")]
         public Guid RetailerId { get; set; }
@@ -209,6 +254,9 @@ namespace tt_apps_srs.Models
     public class Store
     {
         public Guid Id { get; set; }
+
+        [ForeignKey("Retailer")]
+        public Guid RetailerId { get; set; }
 
         [Required, MaxLength(255)]
         public string Name { get; set; }
@@ -233,16 +281,16 @@ namespace tt_apps_srs.Models
         public float Longitude { get; set; }
 
         [Required]
-        public bool Active{ get; set; }
+        public bool Active { get; set; }
+
     }
-
-
-    public class TenantStore
+    
+    public class ClientStore
     {
         public int Id { get; set; }
 
-        [ForeignKey("Tenant")]
-        public Guid TenantId { get; set; }
+        [ForeignKey("Client")]
+        public int ClientId { get; set; }
 
         [ForeignKey("Store")]
         public Guid StoreId { get; set; }
@@ -253,6 +301,58 @@ namespace tt_apps_srs.Models
         public bool Active { get; set; }
     }
 
+    public class ClientProduct
+    {
+        public Guid Id { get; set; }
 
-#endregion
+        [ForeignKey("Client")]
+        public int ClientId { get; set; }
+
+        [Required,MaxLength(512)]
+        public string Name { get; set; }
+
+        public string Desription { get; set; }
+
+        [DataType(DataType.Currency)]
+        public decimal? Default_Cost_Per_Unit { get; set; }
+
+        public DateTime? Start_Date { get; set; }
+        public DateTime? End_Date { get; set; }
+
+        [Required]
+        public bool Active { get; set; }
+    }
+
+    public class ClientProductStore : ClientProductEntity
+    {
+        
+        [ForeignKey("Store")]
+        public Guid StoreId { get; set; }
+
+        [ForeignKey("ClientProduct")]
+        public Guid ClientProductId { get; set; }
+    }
+
+    public class ClientProductRetailer:ClientProductEntity
+    {
+        [ForeignKey("Retailer")]
+        public Guid RetailerId { get; set; }
+
+        [ForeignKey("ClientProduct")]
+        public Guid ClientProductId { get; set; }
+    }
+
+
+    #endregion
+
+    #region Model Supports
+    public class ClientProductEntity
+    {
+
+        [DataType(DataType.Currency)]
+        public decimal? Cost_Per_Unit { get; set; }
+
+        public JsonObject<Dictionary<string, object>> Properties { get; set; }
+    }
+    #endregion
 }

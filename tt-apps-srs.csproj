@@ -4,6 +4,20 @@
     <RootNamespace>tt_apps_srs</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Pages\Retailer\**" />
+    <Compile Remove="Pages\Store\**" />
+    <Compile Remove="Pages\Tenant\**" />
+    <Content Remove="Pages\Retailer\**" />
+    <Content Remove="Pages\Store\**" />
+    <Content Remove="Pages\Tenant\**" />
+    <EmbeddedResource Remove="Pages\Retailer\**" />
+    <EmbeddedResource Remove="Pages\Store\**" />
+    <EmbeddedResource Remove="Pages\Tenant\**" />
+    <None Remove="Pages\Retailer\**" />
+    <None Remove="Pages\Store\**" />
+    <None Remove="Pages\Tenant\**" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.3" />
@@ -17,9 +31,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Migrations\" />
-    <Folder Include="Pages\Tenant\" />
-    <Folder Include="Pages\Retailer\" />
-    <Folder Include="Pages\Store\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Migrations\20180529184843_InitialDatabase.cs" />

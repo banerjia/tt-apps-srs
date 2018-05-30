@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using tt_apps_srs.Models;
 
-namespace tt_apps_srs.Pages.Tenant
+namespace tt_apps_srs.Pages.Client
 {
     public class IndexModel : PageModel
     {
@@ -18,12 +18,12 @@ namespace tt_apps_srs.Pages.Tenant
             _db = db;
         }
 
-        public IList<tt_apps_srs.Models.Tenant> Tenants { get; set; }
+        public IList<tt_apps_srs.Models.Client> Clients { get; set; }
 
 
         public async Task<IActionResult> OnGetAsync()
         {
-            Tenants = await _db.Tenants.Where(q => q.Active).ToListAsync();
+            Clients = await _db.Clients.Where(q => q.Active).ToListAsync();
 
             return Page();
         }
