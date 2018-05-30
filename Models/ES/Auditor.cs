@@ -58,8 +58,15 @@ namespace tt_apps_srs.Models
     }
     public class Audit
     {
+
+        public Audit()
+        {
+            this.InitiatedBy="Owner";
+        }
         public Guid Id { get; set; }
         public string TableName { get; set; }
+
+        public string InitiatedBy { get; set; }
         public DateTime DateTime { get; set; }
 
         public Dictionary<string, object> KeyValues { get; set; }
