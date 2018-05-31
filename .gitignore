@@ -9,9 +9,6 @@ nupkg/
 .bower*
 node_modules/
 
-# Visual Studio Code
-.vscode
-
 # User-specific files
 *.suo
 *.user
@@ -36,3 +33,5 @@ msbuild.wrn
 
 # Visual Studio 2015
 .vs/
+
+# Visual Studio Code

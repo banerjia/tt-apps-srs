@@ -1,0 +1,11 @@
+{
+
+    "emmet.includeLanguages": {
+        "razor":"html"
+    },
+    "files.exclude":{
+        "**/bin": true,
+        "**/obj": true,
+        
+    }
+}
