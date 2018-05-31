@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using tt_apps_srs.Models;
+using tt_apps_srs.Lib;
 
 namespace tt_apps_srs
 {
@@ -23,21 +24,18 @@ namespace tt_apps_srs
             services.AddSession();
 
             // Adding MVC
-            services.AddRouting();
-            services
-                .AddMvc();
+            services.AddMvc();
 
             // Adding ES Client as db change auditor
             services.AddSingleton<IAuditor>( s => new Auditor(Configuration.GetConnectionString("DefaultESConnection")));
             services.AddEntityFrameworkMySql();
+            services.AddTransient<IClientProvider, ClientProvider>();
             services.AddDbContextPool<tt_apps_srs_db_context>((serviceProvider, options) =>
             {
                 options.UseMySql(Configuration.GetConnectionString("DefaultDbConnection"));
                 // DI ES auditor to DB Context
                 options.UseInternalServiceProvider(serviceProvider);
             });
-            
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,17 +52,7 @@ namespace tt_apps_srs
 
             app.UseStaticFiles();
             app.UseSession();
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "TenantManagement",
-                    template: "Tenant/{page}/{id?}"
-                );
-                routes.MapRoute(
-                    name: "TenantBased",
-                    template: "{tenant_url_code}/{controller}/{action}/{id?}"
-                );
-            });
+            app.UseMvcWithDefaultRoute();
         }
     }
 }

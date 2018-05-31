@@ -5,17 +5,20 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using tt_apps_srs.Lib;
 
 namespace tt_apps_srs.Models
 {
     public class tt_apps_srs_db_context: DbContext
     {
         private readonly IAuditor _auditor;
+
         public tt_apps_srs_db_context(DbContextOptions<tt_apps_srs_db_context> options): base(options)
         {
             _auditor = this.GetService<IAuditor>();
@@ -29,6 +32,9 @@ namespace tt_apps_srs.Models
         public DbSet<ClientProduct> ClientProducts { get; set; }
         public DbSet<ClientProductStore> ClientProductStores { get; set; }
         public DbSet<ClientProductRetailer> ClientProductRetailers { get; set; }
+
+        public DbSet<User> Users { get; set; }
+        public DbSet<ClientUser> ClientUsers { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -55,6 +61,11 @@ namespace tt_apps_srs.Models
             #endregion
 
             #region ClientRetailer
+            /*
+            modelBuilder.Entity<ClientRetailer>()
+                        .HasQueryFilter(q => q.ClientId == _clientProvider.GetClientId());
+            */
+
             modelBuilder.Entity<ClientRetailer>()
                         .Property(p => p.Active)
                         .HasDefaultValue(true);
@@ -110,6 +121,27 @@ namespace tt_apps_srs.Models
                         .HasKey(k => new { k.RetailerId, k.ClientProductId })
                         .HasName("PK_ClientProductRetailer");
 
+            #endregion
+            
+            #region User
+
+            modelBuilder.Entity<User>()
+                        .Property(p => p.Active)
+                        .HasDefaultValue(true);
+
+            modelBuilder.Entity<User>()
+                        .HasIndex(i => new { i.Active, i.OpenIdIdentifier })
+                        .HasName("IX_User_ActiveOpenIdIdentifer");
+            #endregion
+
+            #region ClientUser
+            modelBuilder.Entity<ClientUser>()
+                        .Property(p => p.Active)
+                        .HasDefaultValue(true);
+
+            modelBuilder.Entity<ClientUser>()
+                        .HasIndex(i => new { i.Active, i.ClientId, i.UserId })
+                        .HasName("IX_ClientUser_ActiveClientUser");
             #endregion
         }
 
@@ -342,6 +374,35 @@ namespace tt_apps_srs.Models
         public Guid ClientProductId { get; set; }
     }
 
+    public class User
+    {
+        public Guid Id { get; set; }
+
+        [Required, MaxLength(256)]
+        public string Name { get; set; }
+
+        [Required, MaxLength(512)]
+        public string OpenIdIdentifier { get; set; }
+
+        [Required]
+        public bool Active { get; set; }
+    }
+
+    public class ClientUser
+    {
+        public int Id { get; set; }
+
+        [ForeignKey("Client")]
+        public int ClientId { get; set; }
+
+        [ForeignKey("User")]
+        public Guid UserId { get; set; }
+
+        JsonObject<Dictionary<string, object>> Properties { get; set; }
+
+        [Required]
+        public bool Active { get; set; }
+    }
 
     #endregion
 
