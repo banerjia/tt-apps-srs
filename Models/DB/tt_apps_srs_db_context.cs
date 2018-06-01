@@ -55,8 +55,9 @@ namespace tt_apps_srs.Models
             modelBuilder.Entity<Retailer>()
                         .Property(p => p.Active)
                         .HasDefaultValue(true);
+
             modelBuilder.Entity<Retailer>()
-                        .HasIndex(i => new { i.Active })
+                        .HasIndex(i => i.Active )
                         .HasName("IX_Retailer_Active");
             #endregion
 
@@ -73,6 +74,14 @@ namespace tt_apps_srs.Models
             modelBuilder.Entity<ClientRetailer>()
                         .HasIndex(i => new { i.Active, i.ClientId })
                         .HasName("IX_ClientRetailer_ClientActive");
+
+            modelBuilder.Entity<ClientRetailer>()
+                        .HasIndex(i => i.ClientId )
+                        .HasName("IX_ClientRetailer_Client");
+
+            modelBuilder.Entity<ClientRetailer>()
+                        .HasIndex(i => i.Active )
+                        .HasName("IX_ClientRetailer_Active");
             #endregion
 
             #region Store
@@ -87,12 +96,28 @@ namespace tt_apps_srs.Models
             modelBuilder.Entity<Store>()
                         .HasIndex(i => new { i.Active, i.RetailerId })
                         .HasName("IX_Store_RetailerActive");
+
+            modelBuilder.Entity<Store>()
+                        .HasIndex(i => i.RetailerId )
+                        .HasName("IX_Store_Retailer");
+
+            modelBuilder.Entity<Store>()
+                        .HasIndex(i => i.Active)
+                        .HasName("IX_Store_Active");
             #endregion
 
             #region ClientStore
             modelBuilder.Entity<ClientStore>()
                         .HasIndex(i => new { i.Active, i.ClientId })
                         .HasName("IX_ClientStore_ClientActive");
+
+            modelBuilder.Entity<ClientStore>()
+                        .HasIndex(i => i.ClientId )
+                        .HasName("IX_ClientStore_Client");
+            
+            modelBuilder.Entity<ClientStore>()
+                        .HasIndex(i => i.Active)
+                        .HasName("IX_ClientStore_Active");
 
             modelBuilder.Entity<ClientStore>()
                         .Property(p => p.Active)
@@ -103,6 +128,14 @@ namespace tt_apps_srs.Models
             modelBuilder.Entity<ClientProduct>()
                         .HasIndex(i => new { i.Active, i.ClientId })
                         .HasName("IX_ClientProduct_ClientActive");
+
+            modelBuilder.Entity<ClientProduct>()
+                        .HasIndex(i => i.ClientId )
+                        .HasName("IX_ClientProduct_Client");
+
+            modelBuilder.Entity<ClientProduct>()
+                        .HasIndex(i => i.Active)
+                        .HasName("IX_ClientProduct_Active");
 
             modelBuilder.Entity<ClientStore>()
                         .Property(p => p.Active)
@@ -142,6 +175,14 @@ namespace tt_apps_srs.Models
             modelBuilder.Entity<ClientUser>()
                         .HasIndex(i => new { i.Active, i.ClientId, i.UserId })
                         .HasName("IX_ClientUser_ActiveClientUser");
+
+            modelBuilder.Entity<ClientUser>()
+                        .HasIndex(i => i.Active)
+                        .HasName("IX_ClientUser_Active");
+
+            modelBuilder.Entity<ClientUser>()
+                        .HasIndex(i => i.ClientId)
+                        .HasName("IX_ClientUser_Client");
             #endregion
         }
 
@@ -253,6 +294,12 @@ namespace tt_apps_srs.Models
 
         [Required]
         public bool Active { get; set; }
+
+        public virtual IEnumerable<ClientStore> ClientStores {get;set;}
+        public virtual IEnumerable<ClientRetailer> ClientRetailers {get; set;}
+
+        public virtual IEnumerable<ClientUser> ClientUsers {get;set;}
+        public virtual IEnumerable<ClientProduct> ClientProducts {get;set;}
     }
 
     public class Retailer
@@ -265,6 +312,8 @@ namespace tt_apps_srs.Models
 
         [Required]
         public bool Active { get; set; }
+
+        public virtual IEnumerable<Store> Stores {get; set;}
     }
 
     public class ClientRetailer
@@ -281,6 +330,9 @@ namespace tt_apps_srs.Models
 
         [Required]
         public bool Active { get; set; }
+
+        public virtual Client Client {get;set;}
+        public virtual Retailer Retailer {get;set;}
     }
 
     public class Store
@@ -315,6 +367,8 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
+        public virtual Retailer Retailer {get;set;}
+
     }
     
     public class ClientStore
@@ -331,6 +385,9 @@ namespace tt_apps_srs.Models
 
         [Required]
         public bool Active { get; set; }
+
+        public virtual Store Store {get;set;}
+        public virtual Client Client {get;set;}
     }
 
     public class ClientProduct
@@ -353,6 +410,8 @@ namespace tt_apps_srs.Models
 
         [Required]
         public bool Active { get; set; }
+
+        public virtual Client Client {get;set;}
     }
 
     public class ClientProductStore : ClientProductEntity
@@ -363,6 +422,10 @@ namespace tt_apps_srs.Models
 
         [ForeignKey("ClientProduct")]
         public Guid ClientProductId { get; set; }
+
+        public virtual Store Store {get;set;}
+
+        public virtual ClientProduct ClientProduct {get;set;}
     }
 
     public class ClientProductRetailer:ClientProductEntity
@@ -372,6 +435,10 @@ namespace tt_apps_srs.Models
 
         [ForeignKey("ClientProduct")]
         public Guid ClientProductId { get; set; }
+
+        public virtual Retailer Retailer {get;set;}
+
+        public virtual ClientProduct ClientProduct {get;set;}
     }
 
     public class User
@@ -386,6 +453,8 @@ namespace tt_apps_srs.Models
 
         [Required]
         public bool Active { get; set; }
+
+        public virtual Client Client {get;set;}
     }
 
     public class ClientUser
@@ -402,6 +471,9 @@ namespace tt_apps_srs.Models
 
         [Required]
         public bool Active { get; set; }
+
+        public virtual Client Client {get;set;}
+        public virtual User User {get;set;}
     }
 
     #endregion

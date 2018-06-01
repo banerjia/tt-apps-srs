@@ -10,6 +10,7 @@
                 <th>Id</th>
                 <th>Name</th>
                 <th>Url Code</th>
+                <th>Number of Retailers</th>
             </thead>
             <tbody>
                 @foreach (var tenant in Model.Clients)
@@ -18,7 +19,7 @@
                     <td>@tenant.Id</td>
                     <td>@tenant.Name</td>
                     <td>@tenant.UrlCode</td>
-                    <td>@tenant.Active</td>
+                    <td>@tenant.ClientRetailers.Count(q => q.Active )</td>
                 </tr>
                 }
             </tbody>

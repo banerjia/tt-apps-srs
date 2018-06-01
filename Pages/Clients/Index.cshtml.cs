@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using tt_apps_srs.Lib;
 using tt_apps_srs.Models;
 
-namespace tt_apps_srs.Pages.Client
+namespace tt_apps_srs.Pages.Clients
 {
     public class IndexModel : PageModel
     {
@@ -21,14 +21,14 @@ namespace tt_apps_srs.Pages.Client
             _clientProvider = clientProvider;
         }
 
-        public IList<tt_apps_srs.Models.Client> Clients { get; set; }
+        public IList<Client> Clients { get; set; }
 
 
         public async Task<IActionResult> OnGetAsync()
         {
             int? client_id = _clientProvider.GetClientId();
         
-            Clients = await _db.Clients.Where(q => q.Active ).ToListAsync();
+            Clients = await _db.Clients.Include("ClientRetailers").Where(q => q.Active ).ToListAsync();
 
             return Page();
         }

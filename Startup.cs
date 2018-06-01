@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using tt_apps_srs.Models;
 using tt_apps_srs.Lib;
+using Microsoft.AspNetCore.Http;
 
 namespace tt_apps_srs
 {
@@ -29,6 +30,7 @@ namespace tt_apps_srs
             // Adding ES Client as db change auditor
             services.AddSingleton<IAuditor>( s => new Auditor(Configuration.GetConnectionString("DefaultESConnection")));
             services.AddEntityFrameworkMySql();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<IClientProvider, ClientProvider>();
             services.AddDbContextPool<tt_apps_srs_db_context>((serviceProvider, options) =>
             {

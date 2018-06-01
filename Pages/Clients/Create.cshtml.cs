@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json;
 using tt_apps_srs.Models;
 
-namespace tt_apps_srs.Pages.Client
+namespace tt_apps_srs.Pages.Clients
 {
     public class CreateModel : PageModel
     {
@@ -18,19 +18,18 @@ namespace tt_apps_srs.Pages.Client
             _db = db;
         }
 
-        [BindProperty]
         public ClientCreateModel Client {get;set;}
 
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> OnPostAsync(ClientCreateModel tenant)
+        public async Task<IActionResult> OnPostAsync(ClientCreateModel client)
         {
             if (!ModelState.IsValid)
                 return Page();
 
-            tt_apps_srs.Models.Client addClient = new tt_apps_srs.Models.Client{
-                Name = tenant.Name,
-                UrlCode = tenant.UrlCode,
-                Properties =  tenant.Properties
+            Client addClient = new Client{
+                Name = client.Name,
+                UrlCode = client.UrlCode,
+                Properties =  client.Properties
             };
 
             _db.Clients.Add(addClient);
@@ -47,12 +46,10 @@ namespace tt_apps_srs.Pages.Client
         {
         }
 
-        [BindProperty]
         [DisplayName("Client Name")]
         [Required]
         public string Name { get; set; }
 
-        [BindProperty]
         [DisplayName("Client Url Part")]
         [Required]
         public string UrlCode { get; set; }
