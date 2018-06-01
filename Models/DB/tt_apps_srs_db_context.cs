@@ -15,19 +15,19 @@ using tt_apps_srs.Lib;
 
 namespace tt_apps_srs.Models
 {
-    public class tt_apps_srs_db_context: DbContext
+    public class tt_apps_srs_db_context : DbContext
     {
         private readonly IAuditor _auditor;
 
-        public tt_apps_srs_db_context(DbContextOptions<tt_apps_srs_db_context> options): base(options)
+        public tt_apps_srs_db_context(DbContextOptions<tt_apps_srs_db_context> options) : base(options)
         {
             _auditor = this.GetService<IAuditor>();
         }
 
-        public DbSet<Client> Clients {get; set;}
-        public DbSet<Retailer> Retailers {get;set;}
+        public DbSet<Client> Clients { get; set; }
+        public DbSet<Retailer> Retailers { get; set; }
         public DbSet<ClientRetailer> ClientRetailers { get; set; }
-        public DbSet<Store> Stores {get;set;}
+        public DbSet<Store> Stores { get; set; }
         public DbSet<ClientStore> ClientStores { get; set; }
         public DbSet<ClientProduct> ClientProducts { get; set; }
         public DbSet<ClientProductStore> ClientProductStores { get; set; }
@@ -57,7 +57,7 @@ namespace tt_apps_srs.Models
                         .HasDefaultValue(true);
 
             modelBuilder.Entity<Retailer>()
-                        .HasIndex(i => i.Active )
+                        .HasIndex(i => i.Active)
                         .HasName("IX_Retailer_Active");
             #endregion
 
@@ -76,11 +76,11 @@ namespace tt_apps_srs.Models
                         .HasName("IX_ClientRetailer_ClientActive");
 
             modelBuilder.Entity<ClientRetailer>()
-                        .HasIndex(i => i.ClientId )
+                        .HasIndex(i => i.ClientId)
                         .HasName("IX_ClientRetailer_Client");
 
             modelBuilder.Entity<ClientRetailer>()
-                        .HasIndex(i => i.Active )
+                        .HasIndex(i => i.Active)
                         .HasName("IX_ClientRetailer_Active");
             #endregion
 
@@ -98,7 +98,7 @@ namespace tt_apps_srs.Models
                         .HasName("IX_Store_RetailerActive");
 
             modelBuilder.Entity<Store>()
-                        .HasIndex(i => i.RetailerId )
+                        .HasIndex(i => i.RetailerId)
                         .HasName("IX_Store_Retailer");
 
             modelBuilder.Entity<Store>()
@@ -112,9 +112,9 @@ namespace tt_apps_srs.Models
                         .HasName("IX_ClientStore_ClientActive");
 
             modelBuilder.Entity<ClientStore>()
-                        .HasIndex(i => i.ClientId )
+                        .HasIndex(i => i.ClientId)
                         .HasName("IX_ClientStore_Client");
-            
+
             modelBuilder.Entity<ClientStore>()
                         .HasIndex(i => i.Active)
                         .HasName("IX_ClientStore_Active");
@@ -130,7 +130,7 @@ namespace tt_apps_srs.Models
                         .HasName("IX_ClientProduct_ClientActive");
 
             modelBuilder.Entity<ClientProduct>()
-                        .HasIndex(i => i.ClientId )
+                        .HasIndex(i => i.ClientId)
                         .HasName("IX_ClientProduct_Client");
 
             modelBuilder.Entity<ClientProduct>()
@@ -155,7 +155,7 @@ namespace tt_apps_srs.Models
                         .HasName("PK_ClientProductRetailer");
 
             #endregion
-            
+
             #region User
 
             modelBuilder.Entity<User>()
@@ -192,7 +192,7 @@ namespace tt_apps_srs.Models
         {
             var auditEntries = OnBeforeSaveChanges();
             var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-            await OnAfterSaveChanges( auditEntries);
+            await OnAfterSaveChanges(auditEntries);
             return result;
         }
         private List<AuditEntry> OnBeforeSaveChanges()
@@ -245,7 +245,7 @@ namespace tt_apps_srs.Models
                 }
             }
             // keep a list of entries where the value of some properties are unknown at this step
-            return auditEntries.Where(_ => true ||  _.HasTemporaryProperties).ToList();
+            return auditEntries.Where(_ => true || _.HasTemporaryProperties).ToList();
         }
         private Task OnAfterSaveChanges(List<AuditEntry> auditEntries)
         {
@@ -282,24 +282,25 @@ namespace tt_apps_srs.Models
 
     public class Client 
     {
+
         public int Id { get; set; }
 
         [Required, MaxLength(128)]
-        public string Name {get;set;}
+        public string Name { get; set; }
 
         [Required, MaxLength(64)]
         public string UrlCode { get; set; }
 
-        public JsonObject<Dictionary<string,object>> Properties { get; set; }
+        public JsonObject<Dictionary<string, object>> Properties { get; set; }
 
         [Required]
         public bool Active { get; set; }
 
-        public virtual IEnumerable<ClientStore> ClientStores {get;set;}
-        public virtual IEnumerable<ClientRetailer> ClientRetailers {get; set;}
+        public virtual IEnumerable<ClientStore> ClientStores { get; set; }
+        public virtual IEnumerable<ClientRetailer> ClientRetailers { get; set; }
 
-        public virtual IEnumerable<ClientUser> ClientUsers {get;set;}
-        public virtual IEnumerable<ClientProduct> ClientProducts {get;set;}
+        public virtual IEnumerable<ClientUser> ClientUsers { get; set; }
+        public virtual IEnumerable<ClientProduct> ClientProducts { get; set; }
     }
 
     public class Retailer
@@ -307,13 +308,13 @@ namespace tt_apps_srs.Models
         public Guid Id { get; set; }
 
         [Required, MaxLength(512)]
-        public string Name{ get; set; }
+        public string Name { get; set; }
 
 
         [Required]
         public bool Active { get; set; }
 
-        public virtual IEnumerable<Store> Stores {get; set;}
+        public virtual IEnumerable<Store> Stores { get; set; }
     }
 
     public class ClientRetailer
@@ -331,8 +332,8 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
-        public virtual Client Client {get;set;}
-        public virtual Retailer Retailer {get;set;}
+        public virtual Client Client { get; set; }
+        public virtual Retailer Retailer { get; set; }
     }
 
     public class Store
@@ -349,7 +350,7 @@ namespace tt_apps_srs.Models
         public string Addr_Ln_1 { get; set; }
 
         [MaxLength(512)]
-        public string Addr_Ln_2 {get;set;}
+        public string Addr_Ln_2 { get; set; }
 
         [Required, MaxLength(128)]
         public string City { get; set; }
@@ -367,10 +368,10 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
-        public virtual Retailer Retailer {get;set;}
+        public virtual Retailer Retailer { get; set; }
 
     }
-    
+
     public class ClientStore
     {
         public int Id { get; set; }
@@ -386,8 +387,8 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
-        public virtual Store Store {get;set;}
-        public virtual Client Client {get;set;}
+        public virtual Store Store { get; set; }
+        public virtual Client Client { get; set; }
     }
 
     public class ClientProduct
@@ -397,7 +398,7 @@ namespace tt_apps_srs.Models
         [ForeignKey("Client")]
         public int ClientId { get; set; }
 
-        [Required,MaxLength(512)]
+        [Required, MaxLength(512)]
         public string Name { get; set; }
 
         public string Desription { get; set; }
@@ -411,24 +412,24 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
-        public virtual Client Client {get;set;}
+        public virtual Client Client { get; set; }
     }
 
     public class ClientProductStore : ClientProductEntity
     {
-        
+
         [ForeignKey("Store")]
         public Guid StoreId { get; set; }
 
         [ForeignKey("ClientProduct")]
         public Guid ClientProductId { get; set; }
 
-        public virtual Store Store {get;set;}
+        public virtual Store Store { get; set; }
 
-        public virtual ClientProduct ClientProduct {get;set;}
+        public virtual ClientProduct ClientProduct { get; set; }
     }
 
-    public class ClientProductRetailer:ClientProductEntity
+    public class ClientProductRetailer : ClientProductEntity
     {
         [ForeignKey("Retailer")]
         public Guid RetailerId { get; set; }
@@ -436,9 +437,9 @@ namespace tt_apps_srs.Models
         [ForeignKey("ClientProduct")]
         public Guid ClientProductId { get; set; }
 
-        public virtual Retailer Retailer {get;set;}
+        public virtual Retailer Retailer { get; set; }
 
-        public virtual ClientProduct ClientProduct {get;set;}
+        public virtual ClientProduct ClientProduct { get; set; }
     }
 
     public class User
@@ -454,7 +455,7 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
-        public virtual Client Client {get;set;}
+        public virtual Client Client { get; set; }
     }
 
     public class ClientUser
@@ -472,8 +473,8 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
-        public virtual Client Client {get;set;}
-        public virtual User User {get;set;}
+        public virtual Client Client { get; set; }
+        public virtual User User { get; set; }
     }
 
     #endregion

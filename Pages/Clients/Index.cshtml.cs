@@ -14,14 +14,18 @@ namespace tt_apps_srs.Pages.Clients
     {
         private readonly tt_apps_srs_db_context _db;
         private readonly IClientProvider _clientProvider;
+        private readonly IAuditor _auditor;
 
-        public IndexModel(tt_apps_srs_db_context db, IClientProvider clientProvider)
+        public IndexModel(tt_apps_srs_db_context db, 
+                            IClientProvider clientProvider,
+                            IAuditor auditor)
         {
             _db = db;
             _clientProvider = clientProvider;
+            _auditor = auditor;
         }
 
-        public IList<Client> Clients { get; set; }
+        public IList<Client> Clients { get; private set; }
 
 
         public async Task<IActionResult> OnGetAsync()

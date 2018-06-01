@@ -1,5 +1,6 @@
-﻿@page 
+﻿@page
 @model IndexModel
+@inject tt_apps_srs.Models.IAuditor auditor
 @{
     ViewData["Title"] = "Clients";
 }
@@ -11,15 +12,24 @@
                 <th>Name</th>
                 <th>Url Code</th>
                 <th>Number of Retailers</th>
+                <th>Created On</th>
+                <th>Last Updated On</th>
             </thead>
             <tbody>
                 @foreach (var tenant in Model.Clients)
                 {
+                    var t = tenant.GetType();
+                    var task_timestamps = (Task) typeof(Auditor).GetMethod("CreatedUpdatedDatesAsync").MakeGenericMethod(t).Invoke(auditor, new object[] { tenant.Id });
+                    await task_timestamps.ConfigureAwait(false);
+                    var timestamps = (ObjectTimestamps) task_timestamps.GetType().GetProperty("Result").GetValue(task_timestamps);
+
                 <tr>
                     <td>@tenant.Id</td>
                     <td>@tenant.Name</td>
                     <td>@tenant.UrlCode</td>
-                    <td>@tenant.ClientRetailers.Count(q => q.Active )</td>
+                    <td>@tenant.ClientRetailers.Count(q => q.Active)</td>
+                    <td>@timestamps.CreatedOn</td>
+                    <td>@timestamps.LastUpdatedOn</td>
                 </tr>
                 }
             </tbody>
