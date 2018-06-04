@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/banerjia/tt-apps-srs#readme",
   "dependencies": {
-    "@json-editor/json-editor": "^1.0.0"
+    "@json-editor/json-editor": "^1.0.0",
+    "font-awesome": "^4.7.0"
   }
 }

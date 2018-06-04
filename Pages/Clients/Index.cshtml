@@ -8,7 +8,7 @@
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
         <table class="table table-striped">
             <thead>
-                <th>Id</th>
+                <td>&nbsp;</td>
                 <th>Name</th>
                 <th>Url Code</th>
                 <th>Number of Retailers</th>
@@ -24,7 +24,12 @@
                     var timestamps = (ObjectTimestamps) task_timestamps.GetType().GetProperty("Result").GetValue(task_timestamps);
 
                 <tr>
-                    <td>@tenant.Id</td>
+                    <td>
+                        <a asp-page="./Edit" asp-route-id="@tenant.Id">
+                            <i class="far fa-edit"></i>
+                            Edit
+                        </a>
+                    </td>
                     <td>@tenant.Name</td>
                     <td>@tenant.UrlCode</td>
                     <td>@tenant.ClientRetailers.Count(q => q.Active)</td>
@@ -38,7 +43,10 @@
 </div>
 <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-        <a asp-page="./Create" class="btn btn-success">Add New Client</a>
+        <a asp-page="./Create" class="btn btn-success">
+            <i class="fas fa-pencil-alt"></i>
+            Add New Client
+        </a>
     </div>
 </div>
 

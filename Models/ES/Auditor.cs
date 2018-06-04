@@ -64,18 +64,18 @@ namespace tt_apps_srs.Models
                                                                 s.Query(q => q
                                                                             .Bool( b => b
                                                                                         .Must( mt => mt
+                                                                                                .Match( mch => mch
+                                                                                                                .Field( f => f.TableName)
+                                                                                                                .Query(tableName))
+                                                                                         )
+                                                                                         .Filter( fltr => fltr
                                                                                                 .Term( t => t
                                                                                                     .Field("keyValues.Id")
-                                                                                                    .Value(object_id.ToString()))
-                                                                                                )
-                                                                                         .Must( mt => mt
-                                                                                                .Term( t => t
-                                                                                                    .Field("tableName")
-                                                                                                    .Value(tableName)))))
-                                                                   .Aggregations( agg => agg
-                                                                                   . Max("LastUpdatedOn", mx => mx.Field( f => f.DateTime))
-                                                                                   .Min("CreatedOn", mn => mn.Field( f => f.DateTime))
-                                                                   )
+                                                                                                    .Value(object_id.ToString())))))
+                                                                    .Aggregations( agg => agg
+                                                                                    . Max("LastUpdatedOn", mx => mx.Field( f => f.DateTime))
+                                                                                    .Min("CreatedOn", mn => mn.Field( f => f.DateTime))
+                                                                    )
                                );
 
             try
