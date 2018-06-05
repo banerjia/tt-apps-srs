@@ -44,12 +44,13 @@
     <script type="text/javascript">
         var element_startval = document.getElementById("Client_Properties");
         var element = document.getElementById("editor_holder");
+        console.log(unescape(element_startval.value || "{}"));
         var editor = new JSONEditor(element, {
             theme: "bootstrap3",
             iconlib: "fontawesome4",
             disable_edit_json: true,
             disable_collapse: true,
-            startval: element_startval.value,
+            startval: JSON.parse(unescape(element_startval.value || "{}")),
             schema: {
                 "title": "Properties",
                 "type": "object",
@@ -64,8 +65,6 @@
             }
         });
         document.getElementById("form_submit").addEventListener("click", function () {
-            console.log(editor.getValue());
-            alert("Wait!! Wait!!");
             document.getElementById("Client_Properties").value = JSON.stringify(editor.getValue());
         });
     </script>

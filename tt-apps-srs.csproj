@@ -33,6 +33,8 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Migrations\" />
+    <Folder Include="Pages\Manage\" />
+    <Folder Include="Pages\Manage\Clients\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Migrations\20180529184843_InitialDatabase.cs" />
