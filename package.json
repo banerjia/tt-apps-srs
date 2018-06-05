@@ -17,7 +17,10 @@
   },
   "homepage": "https://github.com/banerjia/tt-apps-srs#readme",
   "dependencies": {
+    "@fortawesome/fontawesome": "^1.1.8",
     "@json-editor/json-editor": "^1.0.0",
-    "font-awesome": "^4.7.0"
+    "bootstrap": "^4.1.1",
+    "jquery": "^3.3.1",
+    "popper.js": "^1.14.3"
   }
 }

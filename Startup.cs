@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using tt_apps_srs.Models;
 using tt_apps_srs.Lib;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
 
 namespace tt_apps_srs
 {
@@ -46,12 +48,17 @@ namespace tt_apps_srs
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseFileServer(new FileServerOptions {
+                    FileProvider = new PhysicalFileProvider(
+                                        Path.Combine(Directory.GetCurrentDirectory(), @"node_modules")),
+                    RequestPath = new PathString("/node_modules"),
+                    EnableDirectoryBrowsing = true
+                });
             }
             else
             {
                 app.UseExceptionHandler("/Error");
             }
-
             app.UseStaticFiles();
             app.UseSession();
             app.UseMvcWithDefaultRoute();
