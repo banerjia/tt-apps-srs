@@ -33,6 +33,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Migrations\" />
+    <Folder Include="Views\" />
     <Folder Include="Pages\Manage\" />
     <Folder Include="Pages\Manage\Clients\" />
   </ItemGroup>
