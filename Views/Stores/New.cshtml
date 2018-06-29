@@ -1,0 +1,49 @@
+﻿@model tt_apps_srs.Controllers.Store_NewModel
+
+<form method="post">
+    <div class="row">
+        <div class="col-lg-12 col-sm-12 col-md-12 col-xs-12">
+            <div class="row">
+                <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12"><label asp-for="RetailerId">Retailer</label></div>
+                <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12">
+                    <select class="form-control" asp-for="RetailerId" asp-items="@(new SelectList(Model.ClientRetailers,"Id","Name"))"></select>
+                    <a href="#" class="btn btn-info">New Retailer</a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12"><label asp-for="Name"></label></div>
+                <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12"><input class="form-control" type="text" asp-for="Name"/></div>
+            </div>
+            <div class="row">
+                <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12"><label asp-for="Addr_Ln_1">Street Address</label></div>
+                <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12"><input class="form-control" type="text" asp-for="Addr_Ln_1"></div>
+            </div>
+            <div class="row">
+                <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12"><label asp-for="Addr_Ln_2">Line 2</label></div>
+                <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12"><input class="form-control" type="text" asp-for="Addr_Ln_2"></div>
+            </div>
+            <div class="row">
+                <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12"><label asp-for="City">City</label></div>
+                <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12"><input class="form-control" type="text" asp-for="City"></div>
+            </div>
+            <div class="row">
+                <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12"><label asp-for="State">City</label></div>
+                <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12">
+                    <select class="form-control" asp-for="State">
+                        <option value="CA">California</option>
+                        <option value="OH">Ohio</option>
+                    </select>
+                </div>
+            </div> 
+            <div class="row">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <button class="btn btn-success" asp-action="Create">
+                        Save
+                    </button>
+                    <a asp-action="Index" class="btn btn-default">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+

@@ -8,6 +8,7 @@ using tt_apps_srs.Lib;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
+using Microsoft.AspNetCore.Routing;
 
 namespace tt_apps_srs
 {
@@ -28,6 +29,7 @@ namespace tt_apps_srs
 
             // Adding MVC
             services.AddMvc();
+            services.AddRouting();
 
             // Adding ES Client as db change auditor
             services.AddSingleton<IAuditor>( s => new Auditor(Configuration.GetConnectionString("DefaultESConnection")));
@@ -61,7 +63,14 @@ namespace tt_apps_srs
             }
             app.UseStaticFiles();
             app.UseSession();
-            app.UseMvcWithDefaultRoute();
+
+
+            app.UseMvc(routes =>
+            {
+                routes.MapRoute(
+                     name: "client_routes",
+                     template: "{client_url_code}/{controller=Stores}/{action=Index}/{id?}");
+            });
         }
     }
 }

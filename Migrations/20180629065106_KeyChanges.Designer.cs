@@ -12,9 +12,10 @@ using tt_apps_srs.Models;
 namespace tt_apps_srs.Migrations
 {
     [DbContext(typeof(tt_apps_srs_db_context))]
-    partial class tt_apps_srs_db_contextModelSnapshot : ModelSnapshot
+    [Migration("20180629065106_KeyChanges")]
+    partial class KeyChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

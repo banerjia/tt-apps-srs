@@ -36,6 +36,8 @@
     <Folder Include="Views\" />
     <Folder Include="Pages\Manage\" />
     <Folder Include="Pages\Manage\Clients\" />
+    <Folder Include="Views\Stores\" />
+    <Folder Include="Views\Shared\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Migrations\20180529184843_InitialDatabase.cs" />

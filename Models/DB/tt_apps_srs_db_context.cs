@@ -52,6 +52,7 @@ namespace tt_apps_srs.Models
             #endregion
 
             #region Retailer
+
             modelBuilder.Entity<Retailer>()
                         .Property(p => p.Active)
                         .HasDefaultValue(true);
@@ -85,6 +86,12 @@ namespace tt_apps_srs.Models
             #endregion
 
             #region Store
+
+            modelBuilder.Entity<Store>()
+                        .HasOne(r => r.Retailer)
+                        .WithMany(r => r.Stores)
+                        .HasForeignKey(f => f.RetailerId);
+
             modelBuilder.Entity<Store>()
                         .Property(p => p.Country)
                         .HasDefaultValue("US");
@@ -296,11 +303,11 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
-        public virtual IEnumerable<ClientStore> ClientStores { get; set; }
-        public virtual IEnumerable<ClientRetailer> ClientRetailers { get; set; }
+        public virtual ICollection<ClientStore> ClientStores { get; set; }
+        public virtual ICollection<ClientRetailer> ClientRetailers { get; set; }
 
-        public virtual IEnumerable<ClientUser> ClientUsers { get; set; }
-        public virtual IEnumerable<ClientProduct> ClientProducts { get; set; }
+        public virtual ICollection<ClientUser> ClientUsers { get; set; }
+        public virtual ICollection<ClientProduct> ClientProducts { get; set; }
     }
 
     public class Retailer
@@ -314,10 +321,12 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
-        public virtual IEnumerable<Store> Stores { get; set; }
+        public virtual ICollection<Store> Stores { get; set; }
+
+        public virtual ClientRetailer ClientRetailer { get; set; }
     }
 
-    public class ClientRetailer
+    public  class ClientRetailer
     {
         public int Id { get; set; }
 
@@ -332,15 +341,14 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
-        public virtual Client Client { get; set; }
-        public virtual Retailer Retailer { get; set; }
+        public  Client Client { get; set; }
+        public  Retailer Retailer { get; set; }
     }
 
-    public class Store
+    public class Store 
     {
         public Guid Id { get; set; }
 
-        [ForeignKey("Retailer")]
         public Guid RetailerId { get; set; }
 
         [Required, MaxLength(255)]
