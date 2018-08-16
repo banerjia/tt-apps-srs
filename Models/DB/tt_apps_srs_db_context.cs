@@ -353,6 +353,8 @@ namespace tt_apps_srs.Models
 
         [Required, MaxLength(255)]
         public string Name { get; set; }
+                
+        public int? LocationNumber { get; set; }
 
         [Required, MaxLength(1024)]
         public string Addr_Ln_1 { get; set; }
@@ -366,12 +368,17 @@ namespace tt_apps_srs.Models
         [Required, MaxLength(4)]
         public string State { get; set; }
 
+        public string Zip { get; set; }
+
         [Required, MaxLength(4)]
         public string Country { get; set; }
 
-        public float Latitude { get; set; }
+        [MaxLength(20)]
+        public string Phone { get; set; }
 
-        public float Longitude { get; set; }
+        public float? Latitude { get; set; }
+
+        public float? Longitude { get; set; }
 
         [Required]
         public bool Active { get; set; }

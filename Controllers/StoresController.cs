@@ -12,16 +12,18 @@ namespace tt_apps_srs.Controllers
     public class StoresController : Controller
     {
         private readonly tt_apps_srs_db_context _db;
+        private readonly string _client_url_code;
 
-        public StoresController(tt_apps_srs_db_context db)
+        public StoresController(tt_apps_srs_db_context db, string client_url_code)
         {
             _db = db;
+            _client_url_code = client_url_code;
         }
 
-        public IActionResult Index(string client_url_code)
+        public IActionResult Index()
         {
-            IEnumerable<Store> stores = _db.Stores.Where(q => q.Active && q.Retailer.ClientRetailer.Client.UrlCode == client_url_code);
-            ViewData["client"] = client_url_code;
+            IEnumerable<Store> stores = _db.Stores.Where(q => q.Active && q.Retailer.ClientRetailer.Client.UrlCode == _client_url_code);
+            ViewData["client"] = _client_url_code;
             ViewData["Title"] = "Stores";
             return View(stores);
         }

@@ -12,9 +12,10 @@ using tt_apps_srs.Models;
 namespace tt_apps_srs.Migrations
 {
     [DbContext(typeof(tt_apps_srs_db_context))]
-    partial class tt_apps_srs_db_contextModelSnapshot : ModelSnapshot
+    [Migration("20180816195720_StoreChanges")]
+    partial class StoreChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -268,9 +269,6 @@ namespace tt_apps_srs.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255);
-
-                    b.Property<string>("Phone")
-                        .HasMaxLength(20);
 
                     b.Property<Guid>("RetailerId");
 
