@@ -12,12 +12,17 @@ namespace tt_apps_srs.Lib
         {
             var host = accessor.HttpContext.Request.Path.ToString().Split('/');
 
-            _clientId = db.Clients.FirstOrDefault(q => q.UrlCode == host[0])?.Id;
+            _clientId = db.Clients.FirstOrDefault(q => q.UrlCode == host[1])?.Id;
         }
 
-        public int? GetClientId()
+        public int? ClientId
         {
-            return _clientId;
+            get
+            {
+                return _clientId;
+            }
+
         }
+            
     }
 }

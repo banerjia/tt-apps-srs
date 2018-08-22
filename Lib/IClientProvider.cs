@@ -7,6 +7,6 @@ namespace tt_apps_srs.Lib
 {
     public interface IClientProvider
     {
-        int? GetClientId();
+        int? ClientId { get; }
     }
 }

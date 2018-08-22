@@ -63,8 +63,8 @@ namespace tt_apps_srs
             }
             app.UseStaticFiles();
             app.UseSession();
-
-
+            app.UseMvc();
+            
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

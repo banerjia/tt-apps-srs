@@ -30,7 +30,7 @@ namespace tt_apps_srs.Pages.Clients
 
         public async Task<IActionResult> OnGetAsync()
         {
-            int? client_id = _clientProvider.GetClientId();
+            int? client_id = _clientProvider.ClientId;
         
             Clients = await _db.Clients.Include("ClientRetailers").Where(q => q.Active ).ToListAsync();
 
