@@ -2,8 +2,42 @@
 <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
         <div class="row">
+            <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12">Retailer</div>
+            <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12">None</div>
+        </div>
+        <div class="row">
             <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12">Name</div>
             <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12">@Model.Name</div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12">Location Number</div>
+            <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12">@Model.LocationNumber</div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12">Address</div>
+            <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12">
+                <address>
+                    @Model.Addr_Ln_1,<br />
+                    @if (!String.IsNullOrEmpty(Model.Addr_Ln_2))
+                    {
+                        <text>@Model.Addr_Ln_2,<br /></text>
+
+                    }
+                    @Model.City, @Model.State
+                    @if (!String.IsNullOrEmpty(Model.Zip))
+                    {
+                        <text>- @Model.Zip</text>
+                    }
+                </address>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12">Phone</div>
+            <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12"><tel>@Model.Phone</tel></div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12">Active</div>
+            <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12">@Model.Active</div>
         </div>
     </div>
 </div>
