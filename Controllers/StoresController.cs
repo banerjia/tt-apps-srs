@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using tt_apps_srs.Models;
 using tt_apps_srs.Lib;
+using Microsoft.EntityFrameworkCore;
 
 namespace tt_apps_srs.Controllers
 {
@@ -73,7 +74,10 @@ namespace tt_apps_srs.Controllers
 
         public IActionResult Details(Guid id)
         {
-            var store = _db.Stores.Find(id);
+            var store = _db.Stores
+                                .Include( i => i.Retailer)
+                                .FirstOrDefault( q => q.Id == id);
+
             ViewData["Title"] = "Store: " + store.Name;
             return View(store);
         }

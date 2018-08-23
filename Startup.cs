@@ -24,6 +24,11 @@ namespace tt_apps_srs
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Add Redis Distributed Cache
+
+            services.AddDistributedRedisCache(options => {
+                options.Configuration = Configuration.GetConnectionString("DefaultRedisConnection");
+            });
             // Adding Session
             services.AddSession();
 
@@ -32,9 +37,10 @@ namespace tt_apps_srs
             services.AddRouting();
 
             // Adding ES Client as db change auditor
-            services.AddSingleton<IAuditor>( s => new Auditor(Configuration.GetConnectionString("DefaultESConnection")));
+            services.AddSingleton<IAuditor>(s => new Auditor(Configuration.GetConnectionString("DefaultESConnection")));
             services.AddEntityFrameworkMySql();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            
             services.AddTransient<IClientProvider, ClientProvider>();
             services.AddDbContextPool<tt_apps_srs_db_context>((serviceProvider, options) =>
             {
