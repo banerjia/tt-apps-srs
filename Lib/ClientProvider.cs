@@ -18,6 +18,13 @@ namespace tt_apps_srs.Lib
             var host = accessor.HttpContext.Request.Path.ToString().Split('/');
             string _clientUrlCode = host[1];
 
+            if(_clientUrlCode.Equals("Manage", StringComparison.OrdinalIgnoreCase))
+            {
+                _clientId = 0;
+                _clientName = "SRS";
+                return;
+            }
+
             var cacheEntry = cache.Get(_clientUrlCode + "_name");
             if(cacheEntry == null || !cacheEntry.Any())
             {
@@ -31,7 +38,7 @@ namespace tt_apps_srs.Lib
             }
             else
             {
-                _clientName = BitConverter.ToString(cacheEntry);
+                _clientName = Encoding.ASCII.GetString(cacheEntry);
                 cacheEntry = cache.Get(_clientUrlCode + "_id");
                 _clientId = BitConverter.ToInt32(cacheEntry,0);
             }
@@ -39,7 +46,7 @@ namespace tt_apps_srs.Lib
             
         }
 
-        public int? ClientId
+        public int ClientId
         {
             get
             {

@@ -8,6 +8,7 @@
 <table class="table table-condensed">
     <thead>
         <tr>
+            <td>Options</td>
             <th scope="col">Retailer</th>
             <th scope="col">Name</th>
             <th scope="col">City</th>
@@ -19,6 +20,7 @@
         {
             <tr>
                 <td><a asp-action="Details" asp-route-id="@store.Id">Details</a></td>
+                <td>@store.Retailer.Name</td>
                 <td>@store.Name</td>
                 <td>@store.City</td>
                 <td>@store.State</td>

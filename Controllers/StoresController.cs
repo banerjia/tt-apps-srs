@@ -17,17 +17,22 @@ namespace tt_apps_srs.Controllers
         private readonly ClientProvider _client;
         private int _client_id;
         private string _client_url_code;
+        private string _client_name;
 
         public StoresController(tt_apps_srs_db_context db, IClientProvider client)
         {
             _db = db;
-            _client_id = client.ClientId ?? 0;
+            _client_id = client.ClientId;
+            _client_name = client.Name;
         }
 
         public IActionResult Index()
         {
-            IEnumerable<Store> stores = _db.Stores.Where(q => q.Active && q.Retailer.ClientRetailer.ClientId == _client_id);
-            ViewData["client"] = _client_url_code;
+            IEnumerable<Store> stores = _db.Stores
+                                            .Include( i => i.Retailer)
+                                            .Where(q => q.Active 
+                                                && q.Retailer.ClientRetailer.ClientId == _client_id);
+            ViewData["client"] = _client_name;
             ViewData["Title"] = "Stores";
             return View(stores);
         }
@@ -48,6 +53,7 @@ namespace tt_apps_srs.Controllers
                 model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
             }
 
+            ViewData["client"] = _client_name;
             ViewData["Title"] = "Add New Store";
             return View(model);
         }
@@ -78,6 +84,7 @@ namespace tt_apps_srs.Controllers
                                 .Include( i => i.Retailer)
                                 .FirstOrDefault( q => q.Id == id);
 
+            ViewData["client"] = _client_name;
             ViewData["Title"] = "Store: " + store.Name;
             return View(store);
         }
