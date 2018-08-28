@@ -1,3 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -5,13 +10,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using tt_apps_srs.Lib;
 
 namespace tt_apps_srs.Models
 {
@@ -250,6 +248,7 @@ namespace tt_apps_srs.Models
                             break;
                     }
                 }
+
             }
             // keep a list of entries where the value of some properties are unknown at this step
             return auditEntries.Where(_ => true || _.HasTemporaryProperties).ToList();
@@ -376,14 +375,16 @@ namespace tt_apps_srs.Models
         [MaxLength(20)]
         public string Phone { get; set; }
 
-        public float? Latitude { get; set; }
+        public double? Latitude { get; set; }
 
-        public float? Longitude { get; set; }
+        public double? Longitude { get; set; }
 
         [Required]
         public bool Active { get; set; }
 
         public virtual Retailer Retailer { get; set; }
+
+        public virtual IEnumerable<ClientStore> ClientStores { get; set; }
 
     }
 
@@ -402,7 +403,10 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
+        [ForeignKey("StoreId")]
         public virtual Store Store { get; set; }
+
+        [ForeignKey("ClientId")]
         public virtual Client Client { get; set; }
     }
 
