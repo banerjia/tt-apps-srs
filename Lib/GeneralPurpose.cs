@@ -19,6 +19,7 @@ namespace tt_apps_srs.Lib
             var request = (HttpWebRequest)WebRequest.Create(requestUri);
             request.Method = "GET";
             request.AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip;
+            request.Referer = "http://localhost:1273/dummy";
 
             var response = (HttpWebResponse)request.GetResponse();
             string content = String.Empty;
@@ -30,11 +31,20 @@ namespace tt_apps_srs.Lib
                 }
 
             }
-            var results = (JArray)((JObject.Parse(content))["results"]);
-            var attribs = results.First;
+            try
+            {
+                var results = (JArray)((JObject.Parse(content))["results"]);
+                var attribs = results.First;
 
-            retval.lat = (double)attribs["geometry"]["location"]["lat"];
-            retval.lng = (double)attribs["geometry"]["location"]["lng"];
+                retval.lat = (double)attribs["geometry"]["location"]["lat"];
+                retval.lng = (double)attribs["geometry"]["location"]["lng"];
+
+            }
+            catch
+            {
+                retval.lat = 0;
+                retval.lng = 0;
+            }
 
             return retval;
         }

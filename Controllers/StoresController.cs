@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.IO;
 using Newtonsoft.Json.Linq;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Nest;
 
 namespace tt_apps_srs.Controllers
 {
@@ -21,7 +23,7 @@ namespace tt_apps_srs.Controllers
         private int _client_id;
         private string _client_url_code;
         private string _client_name;
-        private readonly I_ES_Index _es = new ES_Index_Store();
+        private readonly IESIndex _es = new ESIndex_Store();
 
         public StoresController(tt_apps_srs_db_context db, 
                                 IClientProvider client)
@@ -29,22 +31,51 @@ namespace tt_apps_srs.Controllers
             _db = db;
             _client_id = client.ClientId;
             _client_name = client.Name;
+            _client_url_code = client.UrlCode;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string q = null, ushort page = 1, ushort number_of_stores_per_page = 10)
         {
+            /*
             IEnumerable<Store> stores = _db.Stores
                                             .Include( i => i.Retailer)
                                             .Where(q => q.Active 
                                                 && q.Retailer.ClientRetailer.ClientId == _client_id);
+            */
+
+            var searchConfig = new SearchRequest<ESIndex_Store_Document> {
+                Query = new MatchAllQuery(),
+                Size = number_of_stores_per_page,
+                From = page * number_of_stores_per_page
+            };
+
+
+            var resultObject = await _es.SearchAsync<ESIndex_Store_Document>(searchConfig) ;
+
+            var stores = resultObject.Documents;
+
+            
             ViewData["client"] = _client_name;
             ViewData["Title"] = "Stores";
+            ViewData["page"] = page;
             return View(stores);
         }
 
-        public IActionResult New()
+        public IActionResult Details(Guid id)
         {
-            Store_NewModel model = new Store_NewModel();
+            var store = _db.Stores
+                                .Include(i => i.Retailer)
+                                .FirstOrDefault(q => q.Id == id);
+
+            ViewData["client"] = _client_name;
+            ViewData["Title"] = "Store: " + store.Name;
+
+            return View(store);
+        }
+
+        public async Task<IActionResult> New()
+        {
+            Store_AddEditModel model = new Store_AddEditModel();
 
             model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
 
@@ -65,7 +96,7 @@ namespace tt_apps_srs.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Store_NewModel model)
+        public async Task<IActionResult> Create(Store_AddEditModel model)
         {
             Store storeToSave = new Store{
                 RetailerId = model.RetailerId,
@@ -83,14 +114,6 @@ namespace tt_apps_srs.Controllers
             storeToSave.Latitude = location.lat;
             storeToSave.Longitude = location.lng;
 
-            storeToSave.ClientStores.Ad
-                
-                (new ClientStore
-            {
-                ClientId = _client_id,
-                Properties = model.Properties
-            });
-
             _db.Stores.Add(storeToSave);
             await _db.SaveChangesAsync();
             _es.CreateAsAsync(storeToSave);
@@ -98,22 +121,117 @@ namespace tt_apps_srs.Controllers
             return RedirectToAction("Index");
         }
 
-        public IActionResult Details(Guid id)
+        public async Task<IActionResult> Edit(Guid id)
         {
-            var store = _db.Stores
-                                .Include( i => i.Retailer)
-                                .FirstOrDefault( q => q.Id == id);
+            var store = await _db.Stores.FirstOrDefaultAsync( q => q.Id == id);
 
-            ViewData["client"] = _client_name;
-            ViewData["Title"] = "Store: " + store.Name;
+            if (store == null)
+                return View("StoreNotFound");
 
-            return View(store);
+            Store_AddEditModel model = new Store_AddEditModel {
+                Id = id,
+                Name = store.Name,
+                LocationNumber = store.LocationNumber,
+                Addr_Ln_1 = store.Addr_Ln_1,
+                Addr_Ln_2 = store.Addr_Ln_2,
+                City = store.City,
+                State = store.State,
+                Zip = store.Zip,
+                Country = store.Country,
+                Phone = store.Phone,
+                Latitude = store.Latitude,
+                Longitude = store.Longitude
+            };
+            model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
+
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Update(Store_AddEditModel model)
+        {
+            if(!ModelState.IsValid)
+            {
+                model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
+                View("Edit", model);
+            }
+
+            Store storeToUpdate = await _db.Stores.FindAsync(model.Id);
+
+            if (storeToUpdate == null)
+                return NotFound();
+
+            string addr_cmp_old = storeToUpdate.Address.ToUpper();
+            string addr_cmp_new = model.Address.ToUpper();
+
+            storeToUpdate.Name = model.Name;
+            storeToUpdate.LocationNumber = model.LocationNumber;
+            storeToUpdate.Addr_Ln_1 = model.Addr_Ln_1;
+            storeToUpdate.Addr_Ln_2 = model.Addr_Ln_2;
+            storeToUpdate.City = model.City;
+            storeToUpdate.State = model.State;
+            storeToUpdate.Zip = model.Zip;
+            storeToUpdate.RetailerId = model.RetailerId;
+            storeToUpdate.Phone = model.Phone;
+            
+
+            // Only Geocode if the address has changed
+            if(addr_cmp_new != addr_cmp_old 
+                || storeToUpdate.Latitude == null 
+                || storeToUpdate.Latitude == 0)
+            {                
+                GoogleGeocoding_Location location = GeneralPurpose.GetLatLong(addr_cmp_new);
+                storeToUpdate.Latitude = location.lat;
+                storeToUpdate.Longitude = location.lng;
+            }
+
+            _db.Attach(storeToUpdate).State = EntityState.Modified;
+
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
+                View("Edit", model);
+            }
+
+            // Reindex with ES
+            _es.CreateAsAsync(storeToUpdate);
+
+            return RedirectToAction("Details", new { id = model.Id });
+        }
+
+        public async Task<ActionResult> ProcessStores(bool forceGeocode = false, bool ESIndex = true)
+        {
+            var storesToProcess = await _db.Stores.ToListAsync();
+            foreach(var storeToProcess in storesToProcess)
+            {
+                if(forceGeocode || storeToProcess.Latitude == 0 || storeToProcess.Latitude == null)
+                {
+                    GoogleGeocoding_Location location = GeneralPurpose.GetLatLong(storeToProcess.Address);
+                    storeToProcess.Latitude = location.lat;
+                    storeToProcess.Longitude = location.lng;
+                    _db.Attach(storeToProcess).State = EntityState.Modified;
+                }
+                if(ESIndex)
+                    _es.CreateAsAsync(storeToProcess);
+            }
+            
+            await _db.SaveChangesAsync();
+
+            return Ok();
         }
     }
 
-    public class Store_NewModel : Store
+    #region Supporting View Models
+    public class Store_AddEditModel : Store
     {
         public IEnumerable<Retailer> ClientRetailers { get; set; }
         public JsonObject Properties { get; set; }
     }
+    #endregion
 }

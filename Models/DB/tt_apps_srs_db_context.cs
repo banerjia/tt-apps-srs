@@ -344,7 +344,7 @@ namespace tt_apps_srs.Models
         public  Retailer Retailer { get; set; }
     }
 
-    public class Store 
+    public class Store
     {
         public Guid Id { get; set; }
 
@@ -352,7 +352,7 @@ namespace tt_apps_srs.Models
 
         [Required, MaxLength(255)]
         public string Name { get; set; }
-                
+
         public int? LocationNumber { get; set; }
 
         [Required, MaxLength(1024)]
@@ -385,6 +385,21 @@ namespace tt_apps_srs.Models
         public virtual Retailer Retailer { get; set; }
 
         public virtual IEnumerable<ClientStore> ClientStores { get; set; }
+
+        public string Address
+        {
+            get
+            {
+                string retval = Addr_Ln_1;
+                if (!String.IsNullOrEmpty(Addr_Ln_2))
+                    retval += ", " + Addr_Ln_2;
+                retval += String.Format(", {0}, {1}", City, State);
+                if (!String.IsNullOrEmpty(Zip))
+                    retval += " - " + Zip;
+
+                return retval.Trim();
+            }
+        }
 
     }
 
