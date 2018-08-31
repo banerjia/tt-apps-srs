@@ -34,6 +34,7 @@ namespace tt_apps_srs.Controllers
             _client_url_code = client.UrlCode;
 
             _es = new ESIndex_Store();
+
         }
 
         public async Task<IActionResult> Index(string q = null, ushort page = 1, ushort number_of_stores_per_page = 10)
@@ -51,7 +52,6 @@ namespace tt_apps_srs.Controllers
             var stores = resultObject.Documents;
 
             
-            ViewData["client"] = _client_name;
             ViewData["Title"] = "Stores";
             ViewData["page"] = page;
             return View(stores);
@@ -63,7 +63,6 @@ namespace tt_apps_srs.Controllers
                                 .Include(i => i.Retailer)
                                 .FirstOrDefault(q => q.Id == id);
 
-            ViewData["client"] = _client_name;
             ViewData["Title"] = "Store: " + store.Name;
 
             return View(store);
@@ -85,7 +84,6 @@ namespace tt_apps_srs.Controllers
                 model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
             }
 
-            ViewData["client"] = _client_name;
             ViewData["Title"] = "Add New Store";
             return View(model);
         }
