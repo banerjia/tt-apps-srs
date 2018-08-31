@@ -13,6 +13,7 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Nest;
+using System.Globalization;
 
 namespace tt_apps_srs.Controllers
 {
@@ -39,21 +40,58 @@ namespace tt_apps_srs.Controllers
 
         public async Task<IActionResult> Index(string q = null, ushort page = 1, ushort number_of_stores_per_page = 10)
         {
+            AggregationDictionary v = new AggregationDictionary();
 
             var searchConfig = new SearchRequest<ESIndex_Store_Document> {
                 Query = new MatchAllQuery(),
                 Size = number_of_stores_per_page,
-                From = page * number_of_stores_per_page
-            };
+                From = page * number_of_stores_per_page,
+                Aggregations = new AggregationDictionary
+                {
+                    {
+                        "Retailers",
+                        new TermsAggregation("retailer.agg_name.keyword")
+                        {
+                            Field = "retailer.agg_Name.keyword",
+                            Order = new List<TermsOrder>
+                            {
+                                new TermsOrder { Key = "_key", Order = SortOrder.Ascending}
+                                 
+                            }
+                        }                           
+                    },
+                    {
+                        "States",
+                        new TermsAggregation("state.keyword")
+                        {
+                            Field = "state.keyword",
+                            Order = new List<TermsOrder>
+                            {
+                                new TermsOrder { Key = "_key", Order = SortOrder.Ascending}
 
+                            }
+                        }
+                    }
+                }
+            };
 
             var resultObject = await _es.SearchAsync<ESIndex_Store_Document>(searchConfig) ;
 
             var stores = resultObject.Documents;
+            var agg_retailers = resultObject
+                                .Aggregations
+                                .Terms("Retailers")
+                                .Buckets;
+            var agg_states = resultObject
+                                .Aggregations
+                                .Terms("States")
+                                .Buckets;
 
-            
+
             ViewData["Title"] = "Stores";
             ViewData["page"] = page;
+            ViewData["agg_retailers"] = agg_retailers;
+            ViewData["agg_states"] = agg_states;
             return View(stores);
         }
 

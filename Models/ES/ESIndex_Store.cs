@@ -18,10 +18,11 @@ namespace tt_apps_srs.Models
         public ESIndex_Store()
         {
             var connectionString = "http://localhost:9200";
-            var connectionConfiguration = new ConnectionSettings(new Uri(connectionString))
+            var connectionConfiguration = new ConnectionSettings(new Uri(connectionString))                                      
                                         .DefaultMappingFor<ESIndex_Store_Document>(i => i
-                                                                        .IndexName("tt-apps-srs")
-                                                                        .TypeName("store"));
+                                                                        .IndexName("tt-apps-srs-stores")
+                                                                        .TypeName("store")                                                                        
+                                                                        );
 
             _es = new ElasticClient(connectionConfiguration);
 
@@ -49,14 +50,16 @@ namespace tt_apps_srs.Models
                 State = store.State,
                 Retailer = new ESIndex_Store_Document_Retailer{
                     Id = store.RetailerId,
-                    Name = store.Retailer.Name
+                    Name = store.Retailer.Name,
+                    Agg_Name =String.Format("{0}={1}", store.Retailer.Name, store.RetailerId)
                 }
                 
             };
             store_to_add.Clients = 
                 store.ClientStores.Select( s => new ESIndex_Store_Document_Client{
                 UrlCode = s.Client.UrlCode,
-                Name = s.Client.Name
+                Name = s.Client.Name,
+                CreatedAt = s.CreatedAt
             }).ToArray<ESIndex_Store_Document_Client>();
             await _es.IndexDocumentAsync(store_to_add);
         }
@@ -81,18 +84,8 @@ namespace tt_apps_srs.Models
 
             return retval;
         }
-        /*
-        public async Task<ISearchResponse<object>> SearchAsync(ISearchRequest query)
-        {
-
-            var retval = await _es.SearchAsync<object>(query);
-
-            return retval;
-        }
-        */
         public async Task<ISearchResponse<T>> SearchAsync<T>(ISearchRequest query) where T : class
         {
-
             var retval = await _es.SearchAsync<T>(query);
 
             return retval;
@@ -102,6 +95,7 @@ namespace tt_apps_srs.Models
 
     public class ESIndex_Store_Document
     {
+        [Text(Analyzer = "")]
         public Guid Id {get;set;}
         public string Name { get; set; }
         public string City { get; set; }
@@ -117,11 +111,13 @@ namespace tt_apps_srs.Models
     {
         public string UrlCode { get; set; }
         public string Name { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 
     public class ESIndex_Store_Document_Retailer
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public string Agg_Name {get;set;}
     }
 }

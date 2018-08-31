@@ -129,6 +129,12 @@ namespace tt_apps_srs.Models
                         .HasDefaultValue(true);
 
             modelBuilder.Entity<ClientStore>()
+                        .Property(p => p.CreatedAt)
+                        .ValueGeneratedOnAdd()
+                        .HasDefaultValueSql<DateTime>("CURRENT_TIMESTAMP(6)");
+            
+
+            modelBuilder.Entity<ClientStore>()
                         .HasOne( h1 => h1.Store)
                         .WithMany( m => m.ClientStores)
                         .HasForeignKey( f => f.StoreId);
@@ -425,6 +431,9 @@ namespace tt_apps_srs.Models
 
         [Required]
         public bool Active { get; set; }
+
+        [Column(TypeName ="TIMESTAMP(6)")]
+        public DateTime CreatedAt { get; set; }
 
         [ForeignKey("StoreId")]
         public virtual Store Store { get; set; }

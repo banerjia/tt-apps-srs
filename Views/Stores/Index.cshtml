@@ -1,42 +1,66 @@
 ﻿@*
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
+@using System.Globalization
 @model IEnumerable<tt_apps_srs.Models.ESIndex_Store_Document>
 @{
+    TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
 }
+<div class="row">
+    <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
+        <table class="table table-condensed">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">City</th>
+                    <th scope="col">State</th>
+                    <th scope="col">Retailer</th>
+                </tr>
+            </thead>
+            <tfoot>
+                <tr>
+                    <td colspan="2" class="text-left"><a asp-action="Index" asp-route-page="@((ushort)ViewData["page"] - 1)">Previous</a></td>
+                    <td colspan="2" class="text-right"><a asp-action="Index" asp-route-page="@((ushort)ViewData["page"] + 1)">Next</a></td>
+                </tr>
+            </tfoot>
+            <tbody>
+                @foreach (var store in Model)
+                {
+                <tr>
+                    <td><a asp-action="Details" asp-route-id="@store.Id">@textInfo.ToTitleCase(store.Name.ToLower())</a></td>
+                    <td>@textInfo.ToTitleCase(store.City.ToLower())</td>
+                    <td>@store.State</td>
+                    <td>@textInfo.ToTitleCase(store.Retailer.Name.ToLower())</td>
+                </tr>
 
-<table class="table table-condensed">
-    <thead>
-        <tr>
-            <td>Options</td>
-            <th scope="col">Retailer</th>
-            <th scope="col">Name</th>
-            <th scope="col">City</th>
-            <th scope="col">State</th>
-        </tr>
-    </thead>
-    <tfoot>
-        <tr>
-            <td colspan="3"><a asp-action="Index" asp-route-page="@((ushort)ViewData["page"] - 1)">Previous</a></td>
-            <td colspan="2"><a asp-action="Index" asp-route-page="@((ushort)ViewData["page"] + 1)">Next</a></td>
-        </tr>
-    </tfoot>
-    <tbody>
-        @foreach (var store in Model)
-        {
-            <tr>
-                <td>
-                    <a asp-action="Details" asp-route-id="@store.Id">Details</a>
-                    <a asp-action="Edit" asp-route-id="@store.Id">Edit</a>
-                </td>
-                <td>@store.Retailer.Name</td>
-                <td>@store.Name</td>
-                <td>@store.City</td>
-                <td>@store.State</td>
-            </tr>
+                }
 
-        }
-
-    </tbody>
-</table>
+            </tbody>
+        </table>
+    </div>
+    <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
+        <h3>Retailers</h3>
+        <select>
+            <option>All Retailers</option>
+            @foreach (var retailer in (IReadOnlyCollection<Nest.KeyedBucket<string>>)ViewData["agg_retailers"])
+            {
+                string retailer_name = retailer.Key.Split('=').First();
+                string retailer_id = retailer.Key.Split('=').Last();
+                <text>
+                    <option value="@retailer_id">@retailer_name (@retailer.DocCount)</option>
+                </text>
+            }
+        </select>
+        <h3>States</h3>
+        <select>
+            <option>All States</option>
+            @foreach (var state in (IReadOnlyCollection<Nest.KeyedBucket<string>>)ViewData["agg_states"])
+            {
+                <text>
+                    <option>@state.Key (@state.DocCount)</option>
+                </text>
+            }
+        </select>
+    </div>
+</div>
 <a asp-action="New" class="btn btn-success">Add New Store</a>

@@ -15,7 +15,7 @@ namespace tt_apps_srs.Models
         {
             var connectionConfiguration = new ConnectionSettings(new Uri(connectionString))
                                         .DefaultMappingFor<Audit>(i => i
-                                                                        .IndexName("tt-apps-srs")
+                                                                        .IndexName("tt-apps-srs-audits")
                                                                         .TypeName("db_audit"));
 
             _client = new ElasticClient(connectionConfiguration);
