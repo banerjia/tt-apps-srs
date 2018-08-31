@@ -127,6 +127,18 @@ namespace tt_apps_srs.Models
             modelBuilder.Entity<ClientStore>()
                         .Property(p => p.Active)
                         .HasDefaultValue(true);
+
+            modelBuilder.Entity<ClientStore>()
+                        .HasOne( h1 => h1.Store)
+                        .WithMany( m => m.ClientStores)
+                        .HasForeignKey( f => f.StoreId);
+
+            
+            modelBuilder.Entity<ClientStore>()
+                        .HasOne( h1 => h1.Client)
+                        .WithMany( m => m.ClientStores)
+                        .HasForeignKey( f => f.ClientId);
+                
             #endregion
 
             #region ClientProduct
@@ -382,7 +394,6 @@ namespace tt_apps_srs.Models
 
         [Required]
         public bool Active { get; set; }
-
         public virtual Retailer Retailer { get; set; }
 
         public virtual IEnumerable<ClientStore> ClientStores { get; set; }
@@ -407,11 +418,7 @@ namespace tt_apps_srs.Models
     public class ClientStore
     {
         public int Id { get; set; }
-
-        [ForeignKey("Client")]
         public int ClientId { get; set; }
-
-        [ForeignKey("Store")]
         public Guid StoreId { get; set; }
 
         public JsonObject<Dictionary<string, object>> Properties { get; set; }

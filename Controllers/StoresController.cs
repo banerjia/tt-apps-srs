@@ -33,17 +33,11 @@ namespace tt_apps_srs.Controllers
             _client_name = client.Name;
             _client_url_code = client.UrlCode;
 
-            _es = new ESIndex_Store(client);
+            _es = new ESIndex_Store();
         }
 
         public async Task<IActionResult> Index(string q = null, ushort page = 1, ushort number_of_stores_per_page = 10)
         {
-            /*
-            IEnumerable<Store> stores = _db.Stores
-                                            .Include( i => i.Retailer)
-                                            .Where(q => q.Active 
-                                                && q.Retailer.ClientRetailer.ClientId == _client_id);
-            */
 
             var searchConfig = new SearchRequest<ESIndex_Store_Document> {
                 Query = new MatchAllQuery(),
@@ -100,25 +94,32 @@ namespace tt_apps_srs.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Store_AddEditModel model)
         {
-            Store storeToSave = new Store{
-                RetailerId = model.RetailerId,
-                Name = model.Name,
-                Active = true, 
-                Addr_Ln_1 = model.Addr_Ln_1,
-                Addr_Ln_2 = model.Addr_Ln_2,
-                City = model.City,
-                State = model.State,
-                Country = "USA",
-                
-            };
-            string address = String.Format("{0}, {1}, {2}-{3},US", storeToSave.Addr_Ln_1, storeToSave.City, storeToSave.State, storeToSave.Zip);
-            GoogleGeocoding_Location location = GeneralPurpose.GetLatLong(address);
-            storeToSave.Latitude = location.lat;
-            storeToSave.Longitude = location.lng;
 
-            _db.Stores.Add(storeToSave);
+            ClientStore clientStore = new ClientStore{
+                ClientId = _client_id,
+                Store = new Store{
+                    RetailerId = model.RetailerId,
+                    Name = model.Name,
+                    Active = true, 
+                    Addr_Ln_1 = model.Addr_Ln_1,
+                    Addr_Ln_2 = model.Addr_Ln_2,
+                    City = model.City,
+                    State = model.State,
+                    Zip = model.Zip,
+                    Country = "USA",
+                    Phone = model.Phone
+                },
+                Active = true
+            };
+            
+            GoogleGeocoding_Location location = GeneralPurpose.GetLatLong(clientStore.Store.Address);
+            clientStore.Store.Latitude = location.lat;
+            clientStore.Store.Longitude = location.lng;
+
+            _db.ClientStores.Add(clientStore);
             await _db.SaveChangesAsync();
-            _es.CreateAsAsync(storeToSave);
+
+            IndexStoreWithES(clientStore.Store.Id);
 
             return RedirectToAction("Index");
         }
@@ -203,7 +204,7 @@ namespace tt_apps_srs.Controllers
             }
 
             // Reindex with ES
-            _es.CreateAsAsync(storeToUpdate);
+            IndexStoreWithES(storeToUpdate.Id);
 
             return RedirectToAction("Details", new { id = model.Id });
         }
@@ -232,6 +233,18 @@ namespace tt_apps_srs.Controllers
 
             return Ok();
         }
+
+        #region Private Supporting Functions
+        private void IndexStoreWithES(Guid storeId)
+        {
+            var storeToIndex =  _db.Stores
+                                           .Include( s => s.ClientStores)
+                                           .ThenInclude( cs => cs.Client)
+                                           .Include( s => s.Retailer)
+                                           .FirstOrDefault( q => q.Id == storeId);
+            _es.CreateAsAsync(storeToIndex);
+        }
+        #endregion
     }
 
     #region Supporting View Models

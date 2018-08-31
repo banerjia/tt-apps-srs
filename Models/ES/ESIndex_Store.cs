@@ -14,9 +14,8 @@ namespace tt_apps_srs.Models
     public class ESIndex_Store : IESIndex
     {
         private readonly ElasticClient _es;
-        private readonly IClientProvider _client;
 
-        public ESIndex_Store(IClientProvider client)
+        public ESIndex_Store()
         {
             var connectionString = "http://localhost:9200";
             var connectionConfiguration = new ConnectionSettings(new Uri(connectionString))
@@ -25,8 +24,6 @@ namespace tt_apps_srs.Models
                                                                         .TypeName("store"));
 
             _es = new ElasticClient(connectionConfiguration);
-
-            _client = client;
 
 
         }
