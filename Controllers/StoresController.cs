@@ -252,6 +252,8 @@ namespace tt_apps_srs.Controllers
     {
         public IEnumerable<Retailer> ClientRetailers { get; set; }
         public JsonObject Properties { get; set; }
+
+        public Retailer NewRetailer { get; set; }
     }
     #endregion
 }
