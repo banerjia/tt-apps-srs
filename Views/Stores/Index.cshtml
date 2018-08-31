@@ -29,7 +29,7 @@
                     <a asp-action="Details" asp-route-id="@store.Id">Details</a>
                     <a asp-action="Edit" asp-route-id="@store.Id">Edit</a>
                 </td>
-                <td></td>
+                <td>@store.Retailer.Name</td>
                 <td>@store.Name</td>
                 <td>@store.City</td>
                 <td>@store.State</td>

@@ -14,8 +14,9 @@ namespace tt_apps_srs.Models
     public class ESIndex_Store : IESIndex
     {
         private readonly ElasticClient _es;
+        private readonly IClientProvider _client;
 
-        public ESIndex_Store()
+        public ESIndex_Store(IClientProvider client)
         {
             var connectionString = "http://localhost:9200";
             var connectionConfiguration = new ConnectionSettings(new Uri(connectionString))
@@ -24,6 +25,8 @@ namespace tt_apps_srs.Models
                                                                         .TypeName("store"));
 
             _es = new ElasticClient(connectionConfiguration);
+
+            _client = client;
 
 
         }
@@ -40,17 +43,24 @@ namespace tt_apps_srs.Models
                 store.Longitude = location.lng;
             }
 
-            ESIndex_Store_Document store_to_add = (ESIndex_Store_Document) store;
-            store_to_add.location = new GeoLocation(store.Latitude ?? 0, store.Longitude ?? 0);
-            /*
-            new ESIndex_Store_Document
+            ESIndex_Store_Document store_to_add = new ESIndex_Store_Document
             {
                 Id = store.Id,
-                name = store.Name,
-                location = new GeoLocation(store.Latitude ?? 0, store.Longitude ?? 0),
-                city = store.City,
-                state = store.State
-            };*/
+                Name = store.Name,
+                Location = new GeoLocation(store.Latitude ?? 0, store.Longitude ?? 0),
+                City = store.City,
+                State = store.State,
+                Retailer = new ESIndex_Store_Document_Retailer{
+                    Id = store.RetailerId,
+                    Name = store.Retailer.Name
+                }
+                
+            };
+            store_to_add.Clients = 
+                store.ClientStores.Select( s => new ESIndex_Store_Document_Client{
+                UrlCode = s.Client.UrlCode,
+                Name = s.Client.Name
+            }).ToArray<ESIndex_Store_Document_Client>();
             await _es.IndexDocumentAsync(store_to_add);
         }
 
@@ -93,8 +103,28 @@ namespace tt_apps_srs.Models
     }
 
 
-    public class ESIndex_Store_Document:Store
+    public class ESIndex_Store_Document
     {
-        public GeoLocation location { get; set; }
+        public Guid Id {get;set;}
+        public string Name { get; set; }
+        public string City { get; set; }
+        public string State {get;set;}
+        public GeoLocation Location { get; set; }
+
+        public ESIndex_Store_Document_Client[] Clients { get; set; }
+        public ESIndex_Store_Document_Retailer Retailer { get; set; }
+
+    }
+
+    public class ESIndex_Store_Document_Client
+    {
+        public string UrlCode { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class ESIndex_Store_Document_Retailer
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
     }
 }

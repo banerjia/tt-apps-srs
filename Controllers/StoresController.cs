@@ -23,7 +23,7 @@ namespace tt_apps_srs.Controllers
         private int _client_id;
         private string _client_url_code;
         private string _client_name;
-        private readonly IESIndex _es = new ESIndex_Store();
+        private IESIndex _es;
 
         public StoresController(tt_apps_srs_db_context db, 
                                 IClientProvider client)
@@ -32,6 +32,8 @@ namespace tt_apps_srs.Controllers
             _client_id = client.ClientId;
             _client_name = client.Name;
             _client_url_code = client.UrlCode;
+
+            _es = new ESIndex_Store(client);
         }
 
         public async Task<IActionResult> Index(string q = null, ushort page = 1, ushort number_of_stores_per_page = 10)
@@ -195,6 +197,7 @@ namespace tt_apps_srs.Controllers
             }
             catch (Exception)
             {
+
                 model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
                 View("Edit", model);
             }
@@ -207,7 +210,11 @@ namespace tt_apps_srs.Controllers
 
         public async Task<ActionResult> ProcessStores(bool forceGeocode = false, bool ESIndex = true)
         {
-            var storesToProcess = await _db.Stores.ToListAsync();
+            var storesToProcess = await _db.Stores
+                                           .Include( s => s.ClientStores)
+                                           .ThenInclude( cs => cs.Client)
+                                           .Include( s => s.Retailer)
+                                           .ToListAsync();
             foreach(var storeToProcess in storesToProcess)
             {
                 if(forceGeocode || storeToProcess.Latitude == 0 || storeToProcess.Latitude == null)

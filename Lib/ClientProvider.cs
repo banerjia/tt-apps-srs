@@ -16,7 +16,7 @@ namespace tt_apps_srs.Lib
         public ClientProvider(IHttpContextAccessor accessor, tt_apps_srs_db_context db, IDistributedCache cache)
         {
             var host = accessor.HttpContext.Request.Path.ToString().Split('/');
-            string _clientUrlCode = host[1];
+            _clientUrlCode = host[1];
 
             if(_clientUrlCode.Equals("Manage", StringComparison.OrdinalIgnoreCase))
             {

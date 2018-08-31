@@ -329,10 +329,8 @@ namespace tt_apps_srs.Models
     {
         public int Id { get; set; }
 
-        [ForeignKey("Client")]
         public int ClientId { get; set; }
 
-        [ForeignKey("Retailer")]
         public Guid RetailerId { get; set; }
 
         public JsonObject<Dictionary<string, object>> Properties { get; set; }
@@ -340,7 +338,10 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
+        [ForeignKey("ClientId")]
         public  Client Client { get; set; }
+
+        [ForeignKey("RetailerId")]
         public  Retailer Retailer { get; set; }
     }
 
