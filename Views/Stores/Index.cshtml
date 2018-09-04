@@ -5,11 +5,32 @@
 @model IEnumerable<tt_apps_srs.Models.ESIndex_Store_Document>
 @{
     TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+    var prms = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(Context.Request.QueryString.Value);
+    Dictionary<string, string> prms_route_data = new Dictionary<string, string>();
+
+    foreach(var item in prms.Keys)
+    {
+        if (item.Equals("page", StringComparison.OrdinalIgnoreCase))
+        {
+            continue;
+        }
+
+        prms_route_data.Add(item, prms[item].ToString()   );
+    }
 }
 <div class="row">
+    <div class="col-12">
+
+        <a asp-action="New" class="btn btn-success">
+            <i class="fas fa-plus"></i>
+            <span class="hidden-sm hidden-xs">Add New Store</span>
+        </a>
+    </div>
+</div>
+<div class="row">
     <div class="col-lg-7 col-md-7 col-sm-12 col-xs-12">
-        <table class="table table-condensed">
-            <thead>
+        <table class="table table-condensed table-striped">
+            <thead class="thead-light">
                 <tr>
                     <th scope="col">Name</th>
                     <th scope="col">City</th>
@@ -26,12 +47,12 @@
             <tbody>
                 @foreach (var store in Model)
                 {
-                <tr>
-                    <td><a asp-action="Details" asp-route-id="@store.Id">@textInfo.ToTitleCase(store.Name.ToLower())</a></td>
-                    <td>@textInfo.ToTitleCase(store.City.ToLower())</td>
-                    <td>@store.State</td>
-                    <td>@textInfo.ToTitleCase(store.Retailer.Name.ToLower())</td>
-                </tr>
+                    <tr>
+                        <td><a asp-action="Details" asp-route-id="@store.Id">@textInfo.ToTitleCase(store.Name.ToLower())</a></td>
+                        <td>@textInfo.ToTitleCase(store.City.ToLower())</td>
+                        <td>@store.State</td>
+                        <td>@textInfo.ToTitleCase(store.Retailer.Name.ToLower())</td>
+                    </tr>
 
                 }
 
@@ -40,27 +61,24 @@
     </div>
     <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
         <h3>Retailers</h3>
-        <select>
-            <option>All Retailers</option>
+        <ul id="retailer">
             @foreach (var retailer in (IReadOnlyCollection<Nest.KeyedBucket<string>>)ViewData["agg_retailers"])
             {
                 string retailer_name = retailer.Key.Split('=').First();
                 string retailer_id = retailer.Key.Split('=').Last();
                 <text>
-                    <option value="@retailer_id">@retailer_name (@retailer.DocCount)</option>
+                    <li value="@retailer_id">@retailer_name (<a asp-action="Index" asp-route-q="retailer.id.keyword:@retailer_id">@retailer.DocCount</a>) </li>
                 </text>
             }
-        </select>
+        </ul>
         <h3>States</h3>
-        <select>
-            <option>All States</option>
+        <ul>
             @foreach (var state in (IReadOnlyCollection<Nest.KeyedBucket<string>>)ViewData["agg_states"])
             {
                 <text>
-                    <option>@state.Key (@state.DocCount)</option>
+                    <li>@state.Key (<a asp-action="Index" asp-route-q="state.keyword:@state.Key">@state.DocCount</a>)</li>
                 </text>
             }
-        </select>
+        </ul>
     </div>
 </div>
-<a asp-action="New" class="btn btn-success">Add New Store</a>

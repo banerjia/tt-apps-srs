@@ -1,19 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using tt_apps_srs.Models;
-using tt_apps_srs.Lib;
 using Microsoft.EntityFrameworkCore;
-using System.Net;
-using System.IO;
-using Newtonsoft.Json.Linq;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Nest;
-using System.Globalization;
+using tt_apps_srs.Lib;
+using tt_apps_srs.Models;
 
 namespace tt_apps_srs.Controllers
 {
@@ -43,9 +37,8 @@ namespace tt_apps_srs.Controllers
             AggregationDictionary v = new AggregationDictionary();
 
             var searchConfig = new SearchRequest<ESIndex_Store_Document> {
-                Query = new MatchAllQuery(),
                 Size = number_of_stores_per_page,
-                From = page * number_of_stores_per_page,
+                From = (page-1) * number_of_stores_per_page,
                 Aggregations = new AggregationDictionary
                 {
                     {
@@ -75,6 +68,37 @@ namespace tt_apps_srs.Controllers
                 }
             };
 
+            if (!String.IsNullOrEmpty(q))
+            {
+                searchConfig.Query = new BoolQuery
+                {
+                    Must = new List<QueryContainer> 
+                    {
+                        new TermQuery 
+                        {
+                                Field = "clients.urlCode.keyword",
+                                Value = _client_url_code.ToLower()
+                        },
+                        new QueryStringQuery{
+                            DefaultField = "_all",
+                            Query = q
+                        }
+                    }
+                };
+            }
+            else
+                searchConfig.Query = new BoolQuery { 
+                                                Must = new List<QueryContainer> {
+                                                            new TermQuery {
+                                                                    Field = "clients.urlCode.keyword",
+                                                                    Value = _client_url_code.ToLower()
+                                                            }
+                                                }
+                };
+
+                
+
+
             var resultObject = await _es.SearchAsync<ESIndex_Store_Document>(searchConfig) ;
 
             var stores = resultObject.Documents;
@@ -92,6 +116,7 @@ namespace tt_apps_srs.Controllers
             ViewData["page"] = page;
             ViewData["agg_retailers"] = agg_retailers;
             ViewData["agg_states"] = agg_states;
+
             return View(stores);
         }
 
@@ -101,7 +126,7 @@ namespace tt_apps_srs.Controllers
                                 .Include(i => i.Retailer)
                                 .FirstOrDefault(q => q.Id == id);
 
-            ViewData["Title"] = "Store: " + store.Name;
+            ViewData["Title"] = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(store.Name.ToLower());
 
             return View(store);
         }
@@ -130,11 +155,9 @@ namespace tt_apps_srs.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Store_AddEditModel model)
         {
-
             ClientStore clientStore = new ClientStore{
                 ClientId = _client_id,
                 Store = new Store{
-                    RetailerId = model.RetailerId,
                     Name = model.Name,
                     Active = true, 
                     Addr_Ln_1 = model.Addr_Ln_1,
@@ -147,6 +170,21 @@ namespace tt_apps_srs.Controllers
                 },
                 Active = true
             };
+
+            if(!String.IsNullOrEmpty(model.NewRetailer.Name)){
+                Retailer newRetailer = new Retailer{  
+                    Name = model.NewRetailer.Name,
+                    ClientRetailer = new ClientRetailer{ ClientId = _client_id}
+                };
+
+                _db.Retailers.Add(newRetailer);
+                clientStore.Store.Retailer = newRetailer;
+            }
+            else
+            {
+                clientStore.Store.RetailerId = model.RetailerId;
+            }
+
             
             GoogleGeocoding_Location location = GeneralPurpose.GetLatLong(clientStore.Store.Address);
             clientStore.Store.Latitude = location.lat;
@@ -162,7 +200,9 @@ namespace tt_apps_srs.Controllers
 
         public async Task<IActionResult> Edit(Guid id)
         {
-            var store = await _db.Stores.FirstOrDefaultAsync( q => q.Id == id);
+            var store = await _db.Stores
+                                 .Include( i => i.ClientStores)
+                                 .FirstOrDefaultAsync( q => q.Id == id);
 
             if (store == null)
                 return View("StoreNotFound");
@@ -183,6 +223,7 @@ namespace tt_apps_srs.Controllers
             };
             model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
 
+            ViewData["Title"] = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(store.Name.ToLower());
 
             return View(model);
         }
@@ -214,6 +255,20 @@ namespace tt_apps_srs.Controllers
             storeToUpdate.Zip = model.Zip;
             storeToUpdate.RetailerId = model.RetailerId;
             storeToUpdate.Phone = model.Phone;
+
+            if(!String.IsNullOrEmpty(model.NewRetailer.Name)){
+                Retailer newRetailer = new Retailer{  
+                    Name = model.NewRetailer.Name,
+                    ClientRetailer = new ClientRetailer{ ClientId = _client_id}
+                };
+
+                _db.Retailers.Add(newRetailer);
+                storeToUpdate.Retailer = newRetailer;
+            }
+            else
+            {
+                storeToUpdate.RetailerId = model.RetailerId;
+            }
             
 
             // Only Geocode if the address has changed
