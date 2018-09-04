@@ -114,8 +114,14 @@
                 <div class="col-lg-10 col-md-10 col-sm-12 col-xs-12"><input class="form-control" type="text" asp-for="Phone"></div>
             </div>
             <div class="row">
+                <div class="col-12"><label asp-for="MaxOrderAmount">Maximum Total Amount Per Order</label></div>
                 <div class="col-12">
-                    <button class="btn btn-success" asp-action="Create">
+                    <input type="text" value="" class="form-control" asp-for="MaxOrderAmount" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <button class="btn btn-success" asp-action="Update">
                         <i class="fas fa-save"></i>
                         <span class="hidden-sm hidden-xs">Save</span>
                     </button>

@@ -426,8 +426,8 @@ namespace tt_apps_srs.Models
         public int Id { get; set; }
         public int ClientId { get; set; }
         public Guid StoreId { get; set; }
-
-        public JsonObject<Dictionary<string, object>> Properties { get; set; }
+        
+        public JsonObject<string[]> Properties { get; set; }
 
         [Required]
         public bool Active { get; set; }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -220,7 +221,19 @@ namespace tt_apps_srs.Controllers
                 Phone = store.Phone,
                 Latitude = store.Latitude,
                 Longitude = store.Longitude
+            
             };
+
+            var storeClient = _db.ClientStores.FirstOrDefault(q => q.ClientId == _client_id && q.StoreId == store.Id);
+            try
+            {
+                model.MaxOrderAmount = 1;
+            }
+            catch
+            {
+                model.MaxOrderAmount = null;
+            }
+
             model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
 
             ViewData["Title"] = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(store.Name.ToLower());
@@ -238,7 +251,9 @@ namespace tt_apps_srs.Controllers
                 View("Edit", model);
             }
 
-            Store storeToUpdate = await _db.Stores.FindAsync(model.Id);
+            Store storeToUpdate = await _db.Stores
+                                            .Include(i=> i.ClientStores)
+                                            .FirstOrDefaultAsync(q => q.Id == model.Id);
 
             if (storeToUpdate == null)
                 return NotFound();
@@ -255,6 +270,17 @@ namespace tt_apps_srs.Controllers
             storeToUpdate.Zip = model.Zip;
             storeToUpdate.RetailerId = model.RetailerId;
             storeToUpdate.Phone = model.Phone;
+            /*
+            if(model.MaxOrderAmount != null)
+            {
+                var cr = storeToUpdate.ClientStores.FirstOrDefault(q => q.ClientId == _client_id);
+                cr.Properties.Object = new JsonObject<Dictionary<string, string>> {
+                   new {"maxOrderAmount", model.MaxOrderAmount.ToString()}
+                };
+                //.Object["maxOrderAmount"] = model.MaxOrderAmount.ToString();
+                _db.Attach(cr).State = EntityState.Modified;
+            }
+            */
 
             if(!String.IsNullOrEmpty(model.NewRetailer.Name)){
                 Retailer newRetailer = new Retailer{  
@@ -341,9 +367,9 @@ namespace tt_apps_srs.Controllers
     #region Supporting View Models
     public class Store_AddEditModel : Store
     {
+        [Range(0.0, (double)Decimal.MaxValue, ErrorMessage = "Please review the maximum order amount. Any amount of 0 or more is acceptable.")]
+        public decimal? MaxOrderAmount { get; set; }
         public IEnumerable<Retailer> ClientRetailers { get; set; }
-        public JsonObject Properties { get; set; }
-
         public Retailer NewRetailer { get; set; }
     }
     #endregion

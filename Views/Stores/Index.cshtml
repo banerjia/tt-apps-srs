@@ -2,6 +2,7 @@
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
 @using System.Globalization
+@using Nest
 @model IEnumerable<tt_apps_srs.Models.ESIndex_Store_Document>
 @{
     TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
@@ -62,7 +63,7 @@
     <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
         <h3>Retailers</h3>
         <ul id="retailer">
-            @foreach (var retailer in (IReadOnlyCollection<Nest.KeyedBucket<string>>)ViewData["agg_retailers"])
+            @foreach (var retailer in (IReadOnlyCollection<KeyedBucket<string>>)ViewData["agg_retailers"])
             {
                 string retailer_name = retailer.Key.Split('=').First();
                 string retailer_id = retailer.Key.Split('=').Last();
@@ -73,7 +74,7 @@
         </ul>
         <h3>States</h3>
         <ul>
-            @foreach (var state in (IReadOnlyCollection<Nest.KeyedBucket<string>>)ViewData["agg_states"])
+            @foreach (var state in (IReadOnlyCollection<KeyedBucket<string>>)ViewData["agg_states"])
             {
                 <text>
                     <li>@state.Key (<a asp-action="Index" asp-route-q="state.keyword:@state.Key">@state.DocCount</a>)</li>
