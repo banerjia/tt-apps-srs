@@ -186,6 +186,11 @@ namespace tt_apps_srs.Controllers
                 clientStore.Store.RetailerId = model.RetailerId;
             }
 
+            if(model.MaxOrderAmount != null)
+            {
+                clientStore.Properties.Object.MaxOrderAmount = model.MaxOrderAmount;
+            }
+
             
             GoogleGeocoding_Location location = GeneralPurpose.GetLatLong(clientStore.Store.Address);
             clientStore.Store.Latitude = location.lat;
@@ -224,10 +229,10 @@ namespace tt_apps_srs.Controllers
             
             };
 
-            var storeClient = _db.ClientStores.FirstOrDefault(q => q.ClientId == _client_id && q.StoreId == store.Id);
+            var storeClient = store.ClientStores.FirstOrDefault(q => q.ClientId == _client_id);
             try
             {
-                model.MaxOrderAmount = 1;
+                model.MaxOrderAmount = storeClient.Properties.Object.MaxOrderAmount;
             }
             catch
             {
@@ -270,17 +275,11 @@ namespace tt_apps_srs.Controllers
             storeToUpdate.Zip = model.Zip;
             storeToUpdate.RetailerId = model.RetailerId;
             storeToUpdate.Phone = model.Phone;
-            /*
-            if(model.MaxOrderAmount != null)
-            {
-                var cr = storeToUpdate.ClientStores.FirstOrDefault(q => q.ClientId == _client_id);
-                cr.Properties.Object = new JsonObject<Dictionary<string, string>> {
-                   new {"maxOrderAmount", model.MaxOrderAmount.ToString()}
-                };
-                //.Object["maxOrderAmount"] = model.MaxOrderAmount.ToString();
-                _db.Attach(cr).State = EntityState.Modified;
-            }
-            */
+            
+            ClientStore clientStore = storeToUpdate.ClientStores.FirstOrDefault(q => q.ClientId == _client_id);
+            clientStore.Properties.Json =  Newtonsoft.Json.JsonConvert.SerializeObject( new {MaxOrderAmount = model.MaxOrderAmount});
+            
+            _db.Attach(clientStore).State = EntityState.Modified;
 
             if(!String.IsNullOrEmpty(model.NewRetailer.Name)){
                 Retailer newRetailer = new Retailer{  
