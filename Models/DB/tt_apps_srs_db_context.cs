@@ -20,6 +20,7 @@ namespace tt_apps_srs.Models
         public tt_apps_srs_db_context(DbContextOptions<tt_apps_srs_db_context> options) : base(options)
         {
             _auditor = this.GetService<IAuditor>();
+
         }
 
         public DbSet<Client> Clients { get; set; }
@@ -63,8 +64,8 @@ namespace tt_apps_srs.Models
             #region ClientRetailer
             /*
             modelBuilder.Entity<ClientRetailer>()
-                        .HasQueryFilter(q => q.ClientId == _clientProvider.GetClientId());
-            */
+                        .HasQueryFilter(q => q.ClientId == _client.ClientId);*/
+            
 
             modelBuilder.Entity<ClientRetailer>()
                         .Property(p => p.Active)
@@ -81,6 +82,17 @@ namespace tt_apps_srs.Models
             modelBuilder.Entity<ClientRetailer>()
                         .HasIndex(i => i.Active)
                         .HasName("IX_ClientRetailer_Active");
+
+            modelBuilder.Entity<ClientRetailer>()
+                        .HasOne(i => i.Client)
+                        .WithMany(i => i.ClientRetailers)
+                        .HasForeignKey(f => f.ClientId);
+
+            modelBuilder.Entity<ClientRetailer>()
+                        .HasOne(i => i.Retailer)
+                        .WithMany(i => i.ClientRetailers)
+                        .HasForeignKey(f => f.RetailerId);
+                        
             #endregion
 
             #region Store
@@ -206,6 +218,16 @@ namespace tt_apps_srs.Models
             modelBuilder.Entity<ClientUser>()
                         .HasIndex(i => i.ClientId)
                         .HasName("IX_ClientUser_Client");
+
+            modelBuilder.Entity<ClientUser>()
+                        .HasOne(i => i.Client)
+                        .WithMany(i => i.ClientUsers)
+                        .HasForeignKey(f => f.ClientId);
+
+            modelBuilder.Entity<ClientUser>()
+                        .HasOne(i => i.User)
+                        .WithMany(i => i.ClientUsers)
+                        .HasForeignKey(f => f.UserId);
             #endregion
         }
 
@@ -340,7 +362,7 @@ namespace tt_apps_srs.Models
 
         public virtual ICollection<Store> Stores { get; set; }
 
-        public virtual ClientRetailer ClientRetailer { get; set; }
+        public virtual ICollection<ClientRetailer> ClientRetailers { get; set; }
     }
 
     public  class ClientRetailer
@@ -356,10 +378,8 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
-        [ForeignKey("ClientId")]
         public  Client Client { get; set; }
 
-        [ForeignKey("RetailerId")]
         public  Retailer Retailer { get; set; }
     }
 
@@ -435,10 +455,8 @@ namespace tt_apps_srs.Models
         [Column(TypeName ="TIMESTAMP(6)")]
         public DateTime CreatedAt { get; set; }
 
-        [ForeignKey("StoreId")]
-        public virtual Store Store { get; set; }
 
-        [ForeignKey("ClientId")]
+        public virtual Store Store { get; set; }
         public virtual Client Client { get; set; }
     }
 
@@ -506,7 +524,7 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
-        public virtual Client Client { get; set; }
+        public virtual ICollection<ClientUser> ClientUsers { get; set; }
     }
 
     public class ClientUser

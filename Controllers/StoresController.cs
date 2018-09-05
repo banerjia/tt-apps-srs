@@ -121,22 +121,44 @@ namespace tt_apps_srs.Controllers
             return View(stores);
         }
 
-        public IActionResult Details(Guid id)
+        public async Task<IActionResult> Details(Guid id)
         {
-            var store = _db.Stores
+            var store = await _db.Stores
                                 .Include(i => i.Retailer)
-                                .FirstOrDefault(q => q.Id == id);
+                                .Include(i => i.ClientStores)
+                                .FirstOrDefaultAsync(q => q.Id == id );
+
+            Store_DetailModel model = new Store_DetailModel
+            {
+                Id = id,
+                Name = store.Name,
+                LocationNumber = store.LocationNumber,
+                Addr_Ln_1 = store.Addr_Ln_1,
+                Addr_Ln_2 = store.Addr_Ln_2,
+                City = store.City,
+                State = store.State,
+                Zip = store.Zip,
+                Country = store.Country,
+                Phone = store.Phone,
+                Latitude = store.Latitude,
+                Longitude = store.Longitude,
+                MaxOrderAmount = Convert.ToDecimal(store.ClientStores.FirstOrDefault(q => q.ClientId == _client_id).Properties.Object["MaxOrderAmount"])
+            };
 
             ViewData["Title"] = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(store.Name.ToLower());
 
-            return View(store);
+            return View(model);
         }
 
         public async Task<IActionResult> New()
         {
             Store_AddEditModel model = new Store_AddEditModel();
 
-            model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
+            model.ClientRetailers = await _db.ClientRetailers
+                                            .Include(i => i.Retailer)
+                                            .Where( q => q.Active  && q.ClientId == _client_id)
+                                            .Select( s => s.Retailer)
+                                            .ToListAsync();            
                  
 
             ViewData["Title"] = "Add New Store";
@@ -164,9 +186,9 @@ namespace tt_apps_srs.Controllers
             };
 
             if(!String.IsNullOrEmpty(model.NewRetailer.Name)){
-                Retailer newRetailer = new Retailer{  
+                Retailer newRetailer = new Retailer {
                     Name = model.NewRetailer.Name,
-                    ClientRetailer = new ClientRetailer{ ClientId = _client_id}
+                    ClientRetailers = new List<ClientRetailer> { new ClientRetailer { ClientId = _client_id } }
                 };
 
                 _db.Retailers.Add(newRetailer);
@@ -220,8 +242,7 @@ namespace tt_apps_srs.Controllers
                 Country = store.Country,
                 Phone = store.Phone,
                 Latitude = store.Latitude,
-                Longitude = store.Longitude
-            
+                Longitude = store.Longitude            
             };
 
             var storeClient = store.ClientStores.FirstOrDefault(q => q.ClientId == _client_id);
@@ -234,7 +255,7 @@ namespace tt_apps_srs.Controllers
                 model.MaxOrderAmount = null;
             }
 
-            model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
+            //model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
 
             ViewData["Title"] = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(store.Name.ToLower());
 
@@ -247,7 +268,7 @@ namespace tt_apps_srs.Controllers
         {
             if(!ModelState.IsValid)
             {
-                model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
+                //model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
                 View("Edit", model);
             }
 
@@ -295,7 +316,7 @@ namespace tt_apps_srs.Controllers
             if(!String.IsNullOrEmpty(model.NewRetailer.Name)){
                 Retailer newRetailer = new Retailer{  
                     Name = model.NewRetailer.Name,
-                    ClientRetailer = new ClientRetailer{ ClientId = _client_id}
+                    ClientRetailers = new List<ClientRetailer> { new ClientRetailer { ClientId = _client_id } }
                 };
 
                 _db.Retailers.Add(newRetailer);
@@ -326,7 +347,7 @@ namespace tt_apps_srs.Controllers
             catch (Exception)
             {
 
-                model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
+                //model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
                 View("Edit", model);
             }
 
@@ -375,6 +396,10 @@ namespace tt_apps_srs.Controllers
     }
 
     #region Supporting View Models
+    public class Store_DetailModel : Store
+    {
+        public decimal? MaxOrderAmount { get; set; }
+    }
     public class Store_AddEditModel : Store
     {
         [Range(0.0, (double)Decimal.MaxValue, ErrorMessage = "Please review the maximum order amount. Any amount of 0 or more is acceptable.")]

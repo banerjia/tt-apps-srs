@@ -1,4 +1,4 @@
-﻿@model tt_apps_srs.Models.Store
+﻿@model tt_apps_srs.Controllers.Store_DetailModel
 @using System.Globalization
 @{
     TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
@@ -17,6 +17,7 @@
 </div>
 <div class="row">
     <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+        <h2 class="h2">Store Information</h2>
         <div class="row">
             <div class="col-12"><label>Status</label></div>
             <div class="col-12">
@@ -58,6 +59,23 @@
             </div>
 
         }
+        <h2 class="h2">Order Specifications</h2>
+        <p>Specify the parameters and/or criteria to considered while ordering for this store</p>
+        <div class="row">
+            <div class="col-12"> 
+                <label>Maximum total amount for a given order</label>
+            </div>
+            <div class="col-12">
+                @if (Model.MaxOrderAmount != null)
+                {
+                    @String.Format("{0:c", Model.MaxOrderAmount);
+                }
+                else
+                {
+                    <text>No maximum amount specified</text>
+                }
+            </div>
+        </div>
     </div>
     <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
         <div class="panel panel-default">   
@@ -67,43 +85,3 @@
         </div>
     </div>
 </div>
-
-@section Scripts
-    {
-    <script>
-        // Initialize and add the map
-        function initMap() {
-            // The location of Uluru
-            var uluru = { lat: @Model.Latitude, lng: @Model.Longitude };
-            // The map, centered at Uluru
-            var map = new google.maps.Map(
-                document.getElementById('gmap_StoreLocation'), 
-                { 
-                    zoom: 17, 
-                    center: uluru,
-                    disableDefaultUI: true,
-                    zoomControl: true
-                 });
-            // The marker, positioned at Uluru
-            var marker = new google.maps.Marker({
-                position: uluru,
-                map: map,
-                title: '@Model.Name - @Model.LocationNumber',
-                animation: google.maps.Animation.DROP
-            });
-        }
-    </script>
-    <script async defer type="text/javascript"
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA47sqq4fHReCXHT3UTFGaLgulC5sooxt8&callback=initMap">
-    </script>
-}
-@section Head
-    {
-    <style>
-        /* Set the size of the div element that contains the map */
-        #gmap_StoreLocation {
-            height: 400px; /* The height is 400 pixels */
-            width: 100%; /* The width is the width of the web page */
-        }
-    </style>
-}
