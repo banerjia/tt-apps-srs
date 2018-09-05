@@ -427,7 +427,7 @@ namespace tt_apps_srs.Models
         public int ClientId { get; set; }
         public Guid StoreId { get; set; }
 
-        public JsonObject<ClientStoreProperties> Properties { get; set; }
+        public JsonObject<Dictionary<string, object>> Properties { get; set; }
 
         [Required]
         public bool Active { get; set; }
@@ -537,17 +537,7 @@ namespace tt_apps_srs.Models
         [DataType(DataType.Currency)]
         public decimal? Cost_Per_Unit { get; set; }
 
-        public JsonObject<ClientProductEntityProperties> Properties { get; set; }
-    }
-
-    public class ClientProductEntityProperties
-    {
-
-    }
-
-    public class ClientStoreProperties
-    {
-        public decimal? MaxOrderAmount { get; set; }
+        public JsonObject<Dictionary<string, object>> Properties { get; set; }
     }
     #endregion
 }

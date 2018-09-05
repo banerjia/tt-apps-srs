@@ -137,16 +137,7 @@ namespace tt_apps_srs.Controllers
             Store_AddEditModel model = new Store_AddEditModel();
 
             model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
-
-            if(!model.ClientRetailers.Any()){
-                Retailer _tmp = new Retailer{ Active = true, Name = "Retailer 2"};
-                _db.Retailers.Add(_tmp);
-
-                _db.ClientRetailers.Add(new ClientRetailer{ ClientId = 1, Retailer = _tmp, Active = true});
-                _db.SaveChanges();
-
-                model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
-            }
+                 
 
             ViewData["Title"] = "Add New Store";
             return View(model);
@@ -185,12 +176,16 @@ namespace tt_apps_srs.Controllers
             {
                 clientStore.Store.RetailerId = model.RetailerId;
             }
-
+            
             if(model.MaxOrderAmount != null)
             {
-                clientStore.Properties.Object.MaxOrderAmount = model.MaxOrderAmount;
-            }
-
+                clientStore.Properties = new JsonObject<Dictionary<string, object>>
+                {
+                    Object = new Dictionary<string, object>{
+                        {"MaxOrderAmount", model.MaxOrderAmount }
+                    }
+                };
+            }            
             
             GoogleGeocoding_Location location = GeneralPurpose.GetLatLong(clientStore.Store.Address);
             clientStore.Store.Latitude = location.lat;
@@ -232,7 +227,7 @@ namespace tt_apps_srs.Controllers
             var storeClient = store.ClientStores.FirstOrDefault(q => q.ClientId == _client_id);
             try
             {
-                model.MaxOrderAmount = storeClient.Properties.Object.MaxOrderAmount;
+                model.MaxOrderAmount = Convert.ToDecimal(storeClient.Properties.Object["MaxOrderAmount"]);
             }
             catch
             {
@@ -277,8 +272,24 @@ namespace tt_apps_srs.Controllers
             storeToUpdate.Phone = model.Phone;
             
             ClientStore clientStore = storeToUpdate.ClientStores.FirstOrDefault(q => q.ClientId == _client_id);
-            clientStore.Properties.Json =  Newtonsoft.Json.JsonConvert.SerializeObject( new {MaxOrderAmount = model.MaxOrderAmount});
-            
+            Dictionary<string, object> props = new Dictionary<string, object>();
+            try
+            {
+                foreach(var key in clientStore.Properties.Object.Keys.Where( q => q.ToUpper().Trim() != "MAXORDERAMOUNT"))
+                {
+                    props.Add(key, clientStore.Properties.Object[key]);
+                }
+            }
+            catch
+            {
+                props = new Dictionary<string, object>();
+            }
+
+            if(model.MaxOrderAmount != null)
+                props.Add("MaxOrderAmount", model.MaxOrderAmount);
+
+            clientStore.Properties.Object = props;
+
             _db.Attach(clientStore).State = EntityState.Modified;
 
             if(!String.IsNullOrEmpty(model.NewRetailer.Name)){
