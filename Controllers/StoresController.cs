@@ -130,6 +130,7 @@ namespace tt_apps_srs.Controllers
 
             Store_DetailModel model = new Store_DetailModel
             {
+                Active = store.Active,                
                 Id = id,
                 Name = store.Name,
                 LocationNumber = store.LocationNumber,
@@ -142,8 +143,17 @@ namespace tt_apps_srs.Controllers
                 Phone = store.Phone,
                 Latitude = store.Latitude,
                 Longitude = store.Longitude,
-                MaxOrderAmount = Convert.ToDecimal(store.ClientStores.FirstOrDefault(q => q.ClientId == _client_id).Properties.Object["MaxOrderAmount"])
+                Retailer = store.Retailer
             };
+            ClientStore cr = store.ClientStores.FirstOrDefault(q => q.ClientId == _client_id);
+            try
+            {
+                model.MaxOrderAmount = Convert.ToDecimal(cr.Properties.Object["MaxOrderAmount"]);
+            }
+            catch
+            {
+                model.MaxOrderAmount = null;
+            }
 
             ViewData["Title"] = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(store.Name.ToLower());
 
