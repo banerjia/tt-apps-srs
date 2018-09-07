@@ -111,6 +111,7 @@ namespace tt_apps_srs.Models
     {
         public string UrlCode { get; set; }
         public string Name { get; set; }
+        public int? LocationNumber { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 

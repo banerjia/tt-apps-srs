@@ -15,7 +15,6 @@ namespace tt_apps_srs.Controllers
     public class StoresController : Controller
     {
         private readonly tt_apps_srs_db_context _db;
-        private readonly ClientProvider _client;
         private int _client_id;
         private string _client_url_code;
         private string _client_name;
@@ -130,20 +129,13 @@ namespace tt_apps_srs.Controllers
 
             Store_DetailModel model = new Store_DetailModel
             {
-                Active = store.Active,                
+                Active = store.Active,
                 Id = id,
                 Name = store.Name,
-                LocationNumber = store.LocationNumber,
-                Addr_Ln_1 = store.Addr_Ln_1,
-                Addr_Ln_2 = store.Addr_Ln_2,
-                City = store.City,
-                State = store.State,
-                Zip = store.Zip,
-                Country = store.Country,
+                Address = store.Address,
                 Phone = store.Phone,
-                Latitude = store.Latitude,
-                Longitude = store.Longitude,
-                Retailer = store.Retailer
+                RetailerId = store.RetailerId,
+                RetailerName = store.Retailer.Name
             };
             ClientStore cr = store.ClientStores.FirstOrDefault(q => q.ClientId == _client_id);
             try
@@ -153,6 +145,14 @@ namespace tt_apps_srs.Controllers
             catch
             {
                 model.MaxOrderAmount = null;
+            }
+            try
+            {
+                model.LocationNumber = Convert.ToInt32(cr.Properties.Object["LocationNumber"]);
+            }
+            catch
+            {
+                model.LocationNumber = model.LocationNumber;
             }
 
             ViewData["Title"] = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(store.Name.ToLower());
@@ -179,6 +179,15 @@ namespace tt_apps_srs.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Store_AddEditModel model)
         {
+            if(!ModelState.IsValid)
+            {
+                model.ClientRetailers = await _db.ClientRetailers
+                                                    .Where(q => q.ClientId == _client_id)
+                                                    .Select(s => s.Retailer)
+                                                    .ToListAsync();
+
+                return View("New", model);
+            }
             ClientStore clientStore = new ClientStore{
                 ClientId = _client_id,
                 Store = new Store{
@@ -206,18 +215,20 @@ namespace tt_apps_srs.Controllers
             }
             else
             {
-                clientStore.Store.RetailerId = model.RetailerId;
+                clientStore.Store.RetailerId = model.RetailerId??(new Guid());
             }
-            
+            Dictionary<string, object> props = new Dictionary<string, object>();
             if(model.MaxOrderAmount != null)
-            {
+                props.Add("MaxOrderAmount", model.MaxOrderAmount);
+
+            if (model.LocationNumber != null)
+                props.Add("LocationNumber", model.LocationNumber);
+
+            if (props.Any())
                 clientStore.Properties = new JsonObject<Dictionary<string, object>>
                 {
-                    Object = new Dictionary<string, object>{
-                        {"MaxOrderAmount", model.MaxOrderAmount }
-                    }
+                    Object = props
                 };
-            }            
             
             GoogleGeocoding_Location location = GeneralPurpose.GetLatLong(clientStore.Store.Address);
             clientStore.Store.Latitude = location.lat;
@@ -243,16 +254,12 @@ namespace tt_apps_srs.Controllers
             Store_AddEditModel model = new Store_AddEditModel {
                 Id = id,
                 Name = store.Name,
-                LocationNumber = store.LocationNumber,
                 Addr_Ln_1 = store.Addr_Ln_1,
                 Addr_Ln_2 = store.Addr_Ln_2,
                 City = store.City,
                 State = store.State,
                 Zip = store.Zip,
-                Country = store.Country,
-                Phone = store.Phone,
-                Latitude = store.Latitude,
-                Longitude = store.Longitude            
+                Phone = store.Phone           
             };
 
             var storeClient = store.ClientStores.FirstOrDefault(q => q.ClientId == _client_id);
@@ -264,8 +271,19 @@ namespace tt_apps_srs.Controllers
             {
                 model.MaxOrderAmount = null;
             }
+            try
+            {
+                model.LocationNumber = Convert.ToInt32(storeClient.Properties.Object["LocationNumber"]);
+            }
+            catch
+            {
+                model.LocationNumber = null;
+            }
 
-            //model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
+            model.ClientRetailers = await _db.ClientRetailers
+                                                .Where(q => q.ClientId == _client_id)
+                                                .Select(s => s.Retailer)
+                                                .ToListAsync();
 
             ViewData["Title"] = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(store.Name.ToLower());
 
@@ -278,7 +296,10 @@ namespace tt_apps_srs.Controllers
         {
             if(!ModelState.IsValid)
             {
-                //model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
+                model.ClientRetailers = await _db.ClientRetailers
+                                                    .Where(q => q.ClientId == _client_id)
+                                                    .Select(s => s.Retailer)
+                                                    .ToListAsync();
                 View("Edit", model);
             }
 
@@ -293,20 +314,35 @@ namespace tt_apps_srs.Controllers
             string addr_cmp_new = model.Address.ToUpper();
 
             storeToUpdate.Name = model.Name;
-            storeToUpdate.LocationNumber = model.LocationNumber;
             storeToUpdate.Addr_Ln_1 = model.Addr_Ln_1;
             storeToUpdate.Addr_Ln_2 = model.Addr_Ln_2;
             storeToUpdate.City = model.City;
             storeToUpdate.State = model.State;
             storeToUpdate.Zip = model.Zip;
-            storeToUpdate.RetailerId = model.RetailerId;
             storeToUpdate.Phone = model.Phone;
+
+            if (!String.IsNullOrEmpty(model.NewRetailer.Name))
+            {
+                Retailer newRetailer = new Retailer
+                {
+                    Name = model.NewRetailer.Name,
+                    ClientRetailers = new List<ClientRetailer> { new ClientRetailer { ClientId = _client_id } }
+                };
+
+                _db.Retailers.Add(newRetailer);
+                storeToUpdate.Retailer = newRetailer;
+            }
+            else
+                storeToUpdate.RetailerId = (Guid)model.RetailerId;
             
             ClientStore clientStore = storeToUpdate.ClientStores.FirstOrDefault(q => q.ClientId == _client_id);
             Dictionary<string, object> props = new Dictionary<string, object>();
+            string[] keysToUpdate = new string[] { "MaxOrderAmount", "LocationNumber" };
+
+            // Copy JSON data that is not relevant to this action as-is
             try
             {
-                foreach(var key in clientStore.Properties.Object.Keys.Where( q => q.ToUpper().Trim() != "MAXORDERAMOUNT"))
+                foreach(var key in clientStore.Properties.Object.Keys.Where( q => !keysToUpdate.Contains( q )))
                 {
                     props.Add(key, clientStore.Properties.Object[key]);
                 }
@@ -316,26 +352,30 @@ namespace tt_apps_srs.Controllers
                 props = new Dictionary<string, object>();
             }
 
-            if(model.MaxOrderAmount != null)
-                props.Add("MaxOrderAmount", model.MaxOrderAmount);
-
-            clientStore.Properties.Object = props;
+            // Update JSON data that is relevant to this action
+            // Only update the ones that are set to non-null values
+            // This logic will drop the properties that don't have values
+            foreach(string keyToUpdate in keysToUpdate)
+            {
+                try
+                {
+                    if (model.GetType().GetProperty(keyToUpdate).GetValue(model, null) != null)
+                        props.Add(keyToUpdate, model.GetType().GetProperty(keyToUpdate).GetValue(model, null));
+                }
+                catch
+                {
+                    continue;
+                }
+                
+            }
+            // Finally associate the Properties to the
+            // client-store combo
+            clientStore.Properties = new JsonObject<Dictionary<string, object>>
+            {
+                Object = props
+            };
 
             _db.Attach(clientStore).State = EntityState.Modified;
-
-            if(!String.IsNullOrEmpty(model.NewRetailer.Name)){
-                Retailer newRetailer = new Retailer{  
-                    Name = model.NewRetailer.Name,
-                    ClientRetailers = new List<ClientRetailer> { new ClientRetailer { ClientId = _client_id } }
-                };
-
-                _db.Retailers.Add(newRetailer);
-                storeToUpdate.Retailer = newRetailer;
-            }
-            else
-            {
-                storeToUpdate.RetailerId = model.RetailerId;
-            }
             
 
             // Only Geocode if the address has changed
@@ -356,8 +396,10 @@ namespace tt_apps_srs.Controllers
             }
             catch (Exception)
             {
-
-                //model.ClientRetailers = _db.Retailers.Where(q => q.Active && q.ClientRetailer.ClientId == _client_id);
+                model.ClientRetailers = await _db.ClientRetailers
+                                                    .Where(q => q.ClientId == _client_id)
+                                                    .Select(s => s.Retailer)
+                                                    .ToListAsync();
                 View("Edit", model);
             }
 
@@ -406,16 +448,57 @@ namespace tt_apps_srs.Controllers
     }
 
     #region Supporting View Models
-    public class Store_DetailModel : Store
+    public class Store_DetailModel
     {
+        public Guid Id { get; set; }
+        public Guid RetailerId { get; set; }
+
+        public string Name { get; set; }
+        public int? LocationNumber { get; set; }
+
+        public bool Active { get; set; }
+        public string Address { get; set; }
+        public string Phone { get; set; }
+
+        public string RetailerName { get; set; }
+
         public decimal? MaxOrderAmount { get; set; }
     }
-    public class Store_AddEditModel : Store
+    public class Store_AddEditModel 
     {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public int? LocationNumber { get; set; }
+
+        public string Addr_Ln_1 { get; set; }
+        public string Addr_Ln_2 { get; set; }
+        public string City { get; set; }
+        public string State { get; set; }
+        public string Zip { get; set; }
+
+        public string Phone { get; set; }
+        public Guid? RetailerId { get; set; }
+
+
         [Range(0.0, (double)Decimal.MaxValue, ErrorMessage = "Please review the maximum order amount. Any amount of 0 or more is acceptable.")]
         public decimal? MaxOrderAmount { get; set; }
         public IEnumerable<Retailer> ClientRetailers { get; set; }
         public Retailer NewRetailer { get; set; }
+
+        public string Address
+        {
+            get
+            {
+                string retval = Addr_Ln_1;
+                if (!String.IsNullOrEmpty(Addr_Ln_2))
+                    retval += ", " + Addr_Ln_2;
+                retval += String.Format(", {0}, {1}", City, State);
+                if (!String.IsNullOrEmpty(Zip))
+                    retval += " - " + Zip;
+
+                return retval.Trim();
+            }
+        }
     }
     #endregion
 }

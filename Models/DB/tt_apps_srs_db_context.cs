@@ -175,6 +175,12 @@ namespace tt_apps_srs.Models
             modelBuilder.Entity<ClientStore>()
                         .Property(p => p.Active)
                         .HasDefaultValue(true);
+
+            modelBuilder.Entity<ClientProduct>()
+                        .HasOne(i => i.Client)
+                        .WithMany(m => m.ClientProducts)
+                        .HasForeignKey(f => f.ClientId)
+                        .HasConstraintName( "FK_Client_ClientProduct_ClientId");
             #endregion
 
             #region ClientProductStore
@@ -391,9 +397,7 @@ namespace tt_apps_srs.Models
 
         [Required, MaxLength(255)]
         public string Name { get; set; }
-
-        public int? LocationNumber { get; set; }
-
+        
         [Required, MaxLength(1024)]
         public string Addr_Ln_1 { get; set; }
 
@@ -463,14 +467,12 @@ namespace tt_apps_srs.Models
     public class ClientProduct
     {
         public Guid Id { get; set; }
-
-        [ForeignKey("Client")]
         public int ClientId { get; set; }
 
         [Required, MaxLength(512)]
         public string Name { get; set; }
 
-        public string Desription { get; set; }
+        public string Description { get; set; }
 
         [DataType(DataType.Currency)]
         public decimal? Default_Cost_Per_Unit { get; set; }
@@ -487,10 +489,7 @@ namespace tt_apps_srs.Models
     public class ClientProductStore : ClientProductEntity
     {
 
-        [ForeignKey("Store")]
         public Guid StoreId { get; set; }
-
-        [ForeignKey("ClientProduct")]
         public Guid ClientProductId { get; set; }
 
         public virtual Store Store { get; set; }
@@ -500,10 +499,8 @@ namespace tt_apps_srs.Models
 
     public class ClientProductRetailer : ClientProductEntity
     {
-        [ForeignKey("Retailer")]
         public Guid RetailerId { get; set; }
 
-        [ForeignKey("ClientProduct")]
         public Guid ClientProductId { get; set; }
 
         public virtual Retailer Retailer { get; set; }
@@ -531,10 +528,8 @@ namespace tt_apps_srs.Models
     {
         public int Id { get; set; }
 
-        [ForeignKey("Client")]
         public int ClientId { get; set; }
 
-        [ForeignKey("User")]
         public Guid UserId { get; set; }
 
         JsonObject<Dictionary<string, object>> Properties { get; set; }
