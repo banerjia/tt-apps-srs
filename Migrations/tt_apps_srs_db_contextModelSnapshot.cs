@@ -30,7 +30,8 @@ namespace tt_apps_srs.Migrations
                         .IsRequired()
                         .HasMaxLength(128);
 
-                    b.Property<string>("Properties");
+                    b.Property<string>("Properties")
+                        .HasColumnType("JSON");
 
                     b.Property<string>("UrlCode")
                         .IsRequired()
@@ -50,7 +51,9 @@ namespace tt_apps_srs.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<bool>("Active");
+                    b.Property<bool>("Active")
+                        .ValueGeneratedOnAdd()
+                        .HasDefaultValue(true);
 
                     b.Property<int>("ClientId");
 
@@ -88,7 +91,8 @@ namespace tt_apps_srs.Migrations
 
                     b.Property<decimal?>("Cost_Per_Unit");
 
-                    b.Property<string>("Properties");
+                    b.Property<string>("Properties")
+                        .HasColumnType("JSON");
 
                     b.HasKey("RetailerId", "ClientProductId")
                         .HasName("PK_ClientProductRetailer");
@@ -106,7 +110,8 @@ namespace tt_apps_srs.Migrations
 
                     b.Property<decimal?>("Cost_Per_Unit");
 
-                    b.Property<string>("Properties");
+                    b.Property<string>("Properties")
+                        .HasColumnType("JSON");
 
                     b.HasKey("StoreId", "ClientProductId")
                         .HasName("PK_ClientProductStore");
@@ -127,7 +132,8 @@ namespace tt_apps_srs.Migrations
 
                     b.Property<int>("ClientId");
 
-                    b.Property<string>("Properties");
+                    b.Property<string>("Properties")
+                        .HasColumnType("JSON");
 
                     b.Property<Guid>("RetailerId");
 
@@ -163,7 +169,8 @@ namespace tt_apps_srs.Migrations
                         .HasColumnType("TIMESTAMP(6)")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
 
-                    b.Property<string>("Properties");
+                    b.Property<string>("Properties")
+                        .HasColumnType("JSON");
 
                     b.Property<Guid>("StoreId");
 
@@ -193,6 +200,9 @@ namespace tt_apps_srs.Migrations
                         .HasDefaultValue(true);
 
                     b.Property<int>("ClientId");
+
+                    b.Property<string>("Properties")
+                        .HasColumnType("JSON");
 
                     b.Property<Guid>("UserId");
 
@@ -276,7 +286,8 @@ namespace tt_apps_srs.Migrations
                         .IsRequired()
                         .HasMaxLength(4);
 
-                    b.Property<string>("Zip");
+                    b.Property<string>("Zip")
+                        .HasMaxLength(10);
 
                     b.HasKey("Id");
 

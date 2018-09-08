@@ -62,9 +62,6 @@ namespace tt_apps_srs.Models
             #endregion
 
             #region ClientRetailer
-            /*
-            modelBuilder.Entity<ClientRetailer>()
-                        .HasQueryFilter(q => q.ClientId == _client.ClientId);*/
             
 
             modelBuilder.Entity<ClientRetailer>()
@@ -172,7 +169,7 @@ namespace tt_apps_srs.Models
                         .HasIndex(i => i.Active)
                         .HasName("IX_ClientProduct_Active");
 
-            modelBuilder.Entity<ClientStore>()
+            modelBuilder.Entity<ClientProduct>()
                         .Property(p => p.Active)
                         .HasDefaultValue(true);
 
@@ -343,6 +340,7 @@ namespace tt_apps_srs.Models
         [Required, MaxLength(64)]
         public string UrlCode { get; set; }
 
+        [Column(TypeName="JSON")]
         public JsonObject<Dictionary<string, object>> Properties { get; set; }
 
         [Required]
@@ -379,6 +377,7 @@ namespace tt_apps_srs.Models
 
         public Guid RetailerId { get; set; }
 
+        [Column(TypeName="JSON")]
         public JsonObject<object> Properties { get; set; }
 
         [Required]
@@ -410,6 +409,7 @@ namespace tt_apps_srs.Models
         [Required, MaxLength(4)]
         public string State { get; set; }
 
+        [MaxLength(10)]
         public string Zip { get; set; }
 
         [Required, MaxLength(4)]
@@ -451,6 +451,7 @@ namespace tt_apps_srs.Models
         public int ClientId { get; set; }
         public Guid StoreId { get; set; }
 
+        [Column(TypeName="JSON")]
         public JsonObject<Dictionary<string, object>> Properties { get; set; }
 
         [Required]
@@ -532,7 +533,8 @@ namespace tt_apps_srs.Models
 
         public Guid UserId { get; set; }
 
-        JsonObject<Dictionary<string, object>> Properties { get; set; }
+        [Column(TypeName="JSON")]
+        public JsonObject<Dictionary<string, object>> Properties { get; set; }
 
         [Required]
         public bool Active { get; set; }
@@ -550,6 +552,7 @@ namespace tt_apps_srs.Models
         [DataType(DataType.Currency)]
         public decimal? Cost_Per_Unit { get; set; }
 
+        [Column(TypeName="JSON")]
         public JsonObject<Dictionary<string, object>> Properties { get; set; }
     }
     #endregion

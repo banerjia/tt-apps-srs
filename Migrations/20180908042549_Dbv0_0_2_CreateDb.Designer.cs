@@ -9,8 +9,8 @@ using tt_apps_srs.Models;
 namespace tt_apps_srs.Migrations
 {
     [DbContext(typeof(tt_apps_srs_db_context))]
-    [Migration("20180828165656_StoreChanges_GeoLocation")]
-    partial class StoreChanges_GeoLocation
+    [Migration("20180908042549_Dbv0_0_2_CreateDb")]
+    partial class Dbv0_0_2_CreateDb
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -32,7 +32,8 @@ namespace tt_apps_srs.Migrations
                         .IsRequired()
                         .HasMaxLength(128);
 
-                    b.Property<string>("Properties");
+                    b.Property<string>("Properties")
+                        .HasColumnType("JSON");
 
                     b.Property<string>("UrlCode")
                         .IsRequired()
@@ -52,13 +53,15 @@ namespace tt_apps_srs.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<bool>("Active");
+                    b.Property<bool>("Active")
+                        .ValueGeneratedOnAdd()
+                        .HasDefaultValue(true);
 
                     b.Property<int>("ClientId");
 
                     b.Property<decimal?>("Default_Cost_Per_Unit");
 
-                    b.Property<string>("Desription");
+                    b.Property<string>("Description");
 
                     b.Property<DateTime?>("End_Date");
 
@@ -90,7 +93,8 @@ namespace tt_apps_srs.Migrations
 
                     b.Property<decimal?>("Cost_Per_Unit");
 
-                    b.Property<string>("Properties");
+                    b.Property<string>("Properties")
+                        .HasColumnType("JSON");
 
                     b.HasKey("RetailerId", "ClientProductId")
                         .HasName("PK_ClientProductRetailer");
@@ -108,7 +112,8 @@ namespace tt_apps_srs.Migrations
 
                     b.Property<decimal?>("Cost_Per_Unit");
 
-                    b.Property<string>("Properties");
+                    b.Property<string>("Properties")
+                        .HasColumnType("JSON");
 
                     b.HasKey("StoreId", "ClientProductId")
                         .HasName("PK_ClientProductStore");
@@ -129,7 +134,8 @@ namespace tt_apps_srs.Migrations
 
                     b.Property<int>("ClientId");
 
-                    b.Property<string>("Properties");
+                    b.Property<string>("Properties")
+                        .HasColumnType("JSON");
 
                     b.Property<Guid>("RetailerId");
 
@@ -141,8 +147,7 @@ namespace tt_apps_srs.Migrations
                     b.HasIndex("ClientId")
                         .HasName("IX_ClientRetailer_Client");
 
-                    b.HasIndex("RetailerId")
-                        .IsUnique();
+                    b.HasIndex("RetailerId");
 
                     b.HasIndex("Active", "ClientId")
                         .HasName("IX_ClientRetailer_ClientActive");
@@ -161,7 +166,13 @@ namespace tt_apps_srs.Migrations
 
                     b.Property<int>("ClientId");
 
-                    b.Property<string>("Properties");
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TIMESTAMP(6)")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
+
+                    b.Property<string>("Properties")
+                        .HasColumnType("JSON");
 
                     b.Property<Guid>("StoreId");
 
@@ -191,6 +202,9 @@ namespace tt_apps_srs.Migrations
                         .HasDefaultValue(true);
 
                     b.Property<int>("ClientId");
+
+                    b.Property<string>("Properties")
+                        .HasColumnType("JSON");
 
                     b.Property<Guid>("UserId");
 
@@ -259,8 +273,6 @@ namespace tt_apps_srs.Migrations
 
                     b.Property<double?>("Latitude");
 
-                    b.Property<int?>("LocationNumber");
-
                     b.Property<double?>("Longitude");
 
                     b.Property<string>("Name")
@@ -301,8 +313,6 @@ namespace tt_apps_srs.Migrations
                         .ValueGeneratedOnAdd()
                         .HasDefaultValue(true);
 
-                    b.Property<int?>("ClientId");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(256);
@@ -312,8 +322,6 @@ namespace tt_apps_srs.Migrations
                         .HasMaxLength(512);
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ClientId");
 
                     b.HasIndex("Active", "OpenIdIdentifier")
                         .HasName("IX_User_ActiveOpenIdIdentifer");
@@ -326,6 +334,7 @@ namespace tt_apps_srs.Migrations
                     b.HasOne("tt_apps_srs.Models.Client", "Client")
                         .WithMany("ClientProducts")
                         .HasForeignKey("ClientId")
+                        .HasConstraintName("FK_Client_ClientProduct_ClientId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
@@ -363,8 +372,8 @@ namespace tt_apps_srs.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("tt_apps_srs.Models.Retailer", "Retailer")
-                        .WithOne("ClientRetailer")
-                        .HasForeignKey("tt_apps_srs.Models.ClientRetailer", "RetailerId")
+                        .WithMany("ClientRetailers")
+                        .HasForeignKey("RetailerId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
@@ -376,7 +385,7 @@ namespace tt_apps_srs.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("tt_apps_srs.Models.Store", "Store")
-                        .WithMany()
+                        .WithMany("ClientStores")
                         .HasForeignKey("StoreId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
@@ -389,7 +398,7 @@ namespace tt_apps_srs.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("tt_apps_srs.Models.User", "User")
-                        .WithMany()
+                        .WithMany("ClientUsers")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
@@ -400,13 +409,6 @@ namespace tt_apps_srs.Migrations
                         .WithMany("Stores")
                         .HasForeignKey("RetailerId")
                         .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("tt_apps_srs.Models.User", b =>
-                {
-                    b.HasOne("tt_apps_srs.Models.Client", "Client")
-                        .WithMany()
-                        .HasForeignKey("ClientId");
                 });
 #pragma warning restore 612, 618
         }
