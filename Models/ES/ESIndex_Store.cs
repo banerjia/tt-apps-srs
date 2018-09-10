@@ -8,6 +8,7 @@ using System.Net;
 using System.IO;
 using tt_apps_srs.Lib;
 using System.Collections.ObjectModel;
+using Microsoft.Extensions.Configuration;
 
 namespace tt_apps_srs.Models
 {
@@ -15,14 +16,15 @@ namespace tt_apps_srs.Models
     {
         private readonly ElasticClient _es;
 
-        public ESIndex_Store()
+        public ESIndex_Store(IConfiguration config)
         {
-            var connectionString = "http://localhost:9200";
+            var connectionString = config.GetConnectionString("DefaultESConnection");
             var connectionConfiguration = new ConnectionSettings(new Uri(connectionString))                                      
                                         .DefaultMappingFor<ESIndex_Store_Document>(i => i
                                                                         .IndexName("tt-apps-srs-stores")
                                                                         .TypeName("store")                                                                        
                                                                         );
+
 
             _es = new ElasticClient(connectionConfiguration);
 

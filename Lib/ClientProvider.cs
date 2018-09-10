@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Configuration;
+using Nest;
 using System;
 using System.Linq;
 using System.Text;
@@ -13,10 +15,19 @@ namespace tt_apps_srs.Lib
         private string _clientName;
         private string _clientUrlCode;
 
-        public ClientProvider(IHttpContextAccessor accessor, tt_apps_srs_db_context db, IDistributedCache cache)
+        private readonly ElasticClient _esClient;
+
+        public ClientProvider(IHttpContextAccessor accessor, IDistributedCache cache, IConfiguration config)
         {
+            
+            try{
             var host = accessor.HttpContext.Request.Path.ToString().Split('/');
             _clientUrlCode = host[1];
+
+            }
+            catch{
+                _clientUrlCode = "icu";
+            }
 
             if(_clientUrlCode.Equals("Manage", StringComparison.OrdinalIgnoreCase))
             {
@@ -28,9 +39,25 @@ namespace tt_apps_srs.Lib
             var cacheEntry = cache.Get(_clientUrlCode + "_name");
             if(cacheEntry == null || !cacheEntry.Any())
             {
-                var client = db.Clients.FirstOrDefault(q => q.UrlCode == _clientUrlCode);
-                _clientId = client.Id;
+                string connectionString = config.GetConnectionString("DefaultESConnection");
+                var connectionConfiguration = new ConnectionSettings(new Uri(connectionString))
+                                                                            .DefaultMappingFor<Client>(i => i
+                                                                            .IndexName("tt-apps-srs-clients")
+                                                                            );
+
+                _esClient = new ElasticClient(connectionConfiguration);
+
+                var esResponse = _esClient.Search<ESIndex_Client_Document>
+                ( s => s
+                        .Query( q => new TermQuery{
+                                                   Field = "UrlCode",
+                                                   Value = _clientUrlCode
+                         })
+                         .Take(1));
+
+                var client = esResponse.Documents.First();
                 _clientName = client.Name;
+                _clientId = client.Id;
 
                 cache.SetAsync(_clientUrlCode + "_name", Encoding.ASCII.GetBytes(_clientName));
                 cache.SetAsync(_clientUrlCode + "_id", BitConverter.GetBytes(_clientId));
@@ -70,5 +97,13 @@ namespace tt_apps_srs.Lib
                 return _clientUrlCode;
             }
         }
+    }
+
+    public class ESIndex_Client_Document
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string UrlCode { get; set; }
+
     }
 }

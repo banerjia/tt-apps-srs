@@ -10,16 +10,19 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using tt_apps_srs.Lib;
 
 namespace tt_apps_srs.Models
 {
     public class tt_apps_srs_db_context : DbContext
     {
         private readonly IAuditor _auditor;
+        private readonly IClientProvider _client;
 
         public tt_apps_srs_db_context(DbContextOptions<tt_apps_srs_db_context> options) : base(options)
         {
             _auditor = this.GetService<IAuditor>();
+            _client = this.GetService<IClientProvider>(); ;
 
         }
 
@@ -28,10 +31,9 @@ namespace tt_apps_srs.Models
         public DbSet<ClientRetailer> ClientRetailers { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<ClientStore> ClientStores { get; set; }
+        public DbSet<ClientStoreOrder> ClientStoreOrders {get;set;}
+        public DbSet<ClientStoreOrderProduct> ClientStoreOrderProducts {get;set;}
         public DbSet<ClientProduct> ClientProducts { get; set; }
-        public DbSet<ClientProductStore> ClientProductStores { get; set; }
-        public DbSet<ClientProductRetailer> ClientProductRetailers { get; set; }
-
         public DbSet<User> Users { get; set; }
         public DbSet<ClientUser> ClientUsers { get; set; }
 
@@ -122,6 +124,9 @@ namespace tt_apps_srs.Models
 
             #region ClientStore
             modelBuilder.Entity<ClientStore>()
+                        .HasQueryFilter( q => q.ClientId == _client.ClientId);
+
+            modelBuilder.Entity<ClientStore>()
                         .HasIndex(i => new { i.Active, i.ClientId })
                         .HasName("IX_ClientStore_ClientActive");
 
@@ -158,6 +163,9 @@ namespace tt_apps_srs.Models
 
             #region ClientProduct
             modelBuilder.Entity<ClientProduct>()
+                        .HasQueryFilter( q => q.ClientId == _client.ClientId);
+
+            modelBuilder.Entity<ClientProduct>()
                         .HasIndex(i => new { i.Active, i.ClientId })
                         .HasName("IX_ClientProduct_ClientActive");
 
@@ -179,7 +187,7 @@ namespace tt_apps_srs.Models
                         .HasForeignKey(f => f.ClientId)
                         .HasConstraintName( "FK_Client_ClientProduct_ClientId");
             #endregion
-
+/* 
             #region ClientProductStore
             modelBuilder.Entity<ClientProductStore>()
                         .HasKey(k => new { k.StoreId, k.ClientProductId })
@@ -193,7 +201,7 @@ namespace tt_apps_srs.Models
                         .HasName("PK_ClientProductRetailer");
 
             #endregion
-
+*/
             #region User
 
             modelBuilder.Entity<User>()
@@ -206,6 +214,9 @@ namespace tt_apps_srs.Models
             #endregion
 
             #region ClientUser
+            modelBuilder.Entity<ClientUser>()
+                        .HasQueryFilter( q => q.ClientId == _client.ClientId);
+
             modelBuilder.Entity<ClientUser>()
                         .Property(p => p.Active)
                         .HasDefaultValue(true);
@@ -231,6 +242,38 @@ namespace tt_apps_srs.Models
                         .HasOne(i => i.User)
                         .WithMany(i => i.ClientUsers)
                         .HasForeignKey(f => f.UserId);
+            #endregion
+
+            #region ClientStoreOrder
+                        
+            modelBuilder.Entity<ClientStoreOrder>()
+                        .HasIndex( i => i.Status)
+                        .HasName("IX_ClientStoreOrder_Status");
+            
+            modelBuilder.Entity<ClientStoreOrder>()
+                        .HasOne( h1 => h1.ClientStore)
+                        .WithMany( m => m.Orders)
+                        .HasForeignKey( f => f.ClientStoreId);
+            #endregion 
+
+            #region ClientStoreOrderProduct
+            modelBuilder.Entity<ClientStoreOrderProduct>()
+                        .HasKey( k => new { k.OrderId, k.ProductId})
+                        .HasName( "PK_ClientStoreOrderProduct");
+
+            modelBuilder.Entity<ClientStoreOrderProduct>()
+                        .HasIndex( i => new { i.OrderId, i.Status})
+                        .HasName( "IX_ClientStoreOrderProduct_Status");
+
+            modelBuilder.Entity<ClientStoreOrderProduct>()
+                        .HasOne( h1 => h1.Order)
+                        .WithMany( m => m.Items)
+                        .HasForeignKey( f => f.OrderId);
+            
+            modelBuilder.Entity<ClientStoreOrderProduct>()
+                        .HasOne( h1 => h1.Product)
+                        .WithMany( m => m.OrderItems)
+                        .HasForeignKey( f => f.ProductId);
             #endregion
         }
 
@@ -463,6 +506,52 @@ namespace tt_apps_srs.Models
 
         public virtual Store Store { get; set; }
         public virtual Client Client { get; set; }
+
+        public virtual ICollection<ClientStoreOrder> Orders {get; set;}
+    }
+
+    public class ClientStoreOrder
+    {
+        public Guid Id { get; set; }
+        public int ClientStoreId {get;set;}
+        public decimal Total { get; set; }
+        public string Notes { get; set; }
+        [MaxLength(4)]
+        public string Status { get; set; }
+        public Guid CreatedBy { get; set; }
+        [Column(TypeName="TIMESTAMP(6)")]
+        public DateTime CreatedAt { get; set; }
+
+        public Guid? VerifiedBy { get; set; }
+        public DateTime? VerifiedAt { get; set; }
+
+
+        public virtual ClientStore ClientStore { get; set; }
+
+        public virtual ICollection<ClientStoreOrderProduct> Items { get; set; }
+
+        [NotMapped]
+        public virtual User CreatedByUser {get;set;}
+
+        [NotMapped]
+        public virtual User VerifiedByUser {get; set;}
+
+    }
+
+    public class ClientStoreOrderProduct
+    {
+        public Guid OrderId { get; set; }
+        public Guid ProductId {get; set;}
+        public uint Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+
+        [MaxLength(4)]
+        public string Status { get; set; }
+
+        public virtual ClientStoreOrder Order { get; set; }
+        public virtual ClientProduct Product {get;set;}
+
+
     }
 
     public class ClientProduct
@@ -485,8 +574,10 @@ namespace tt_apps_srs.Models
         public bool Active { get; set; }
 
         public virtual Client Client { get; set; }
+        public virtual ICollection<ClientStoreOrderProduct> OrderItems {get;set;}
     }
 
+    /* 
     public class ClientProductStore : ClientProductEntity
     {
 
@@ -508,7 +599,7 @@ namespace tt_apps_srs.Models
 
         public virtual ClientProduct ClientProduct { get; set; }
     }
-
+    */
     public class User
     {
         public Guid Id { get; set; }

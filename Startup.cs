@@ -38,10 +38,9 @@ namespace tt_apps_srs
 
             // Adding ES Client as db change auditor
             services.AddSingleton<IAuditor>(s => new Auditor(Configuration.GetConnectionString("DefaultESConnection")));
+            services.AddScoped<IClientProvider, ClientProvider>();
             services.AddEntityFrameworkMySql();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            
-            services.AddTransient<IClientProvider, ClientProvider>();
             services.AddDbContextPool<tt_apps_srs_db_context>((serviceProvider, options) =>
             {
                 options.UseMySql(Configuration.GetConnectionString("DefaultDbConnection"));

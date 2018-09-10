@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Nest;
 using tt_apps_srs.Lib;
 using tt_apps_srs.Models;
@@ -15,25 +16,29 @@ namespace tt_apps_srs.Controllers
     public class StoresController : Controller
     {
         private readonly tt_apps_srs_db_context _db;
+        private readonly IESIndex _es;
         private int _client_id;
         private string _client_url_code;
         private string _client_name;
-        private IESIndex _es;
+        private readonly IClientProvider _client;
 
         public StoresController(tt_apps_srs_db_context db, 
-                                IClientProvider client)
+                                IClientProvider client,
+                                IConfiguration config)
         {
             _db = db;
             _client_id = client.ClientId;
             _client_name = client.Name;
             _client_url_code = client.UrlCode;
+            _client = client;
 
-            _es = new ESIndex_Store();
+            _es = new ESIndex_Store(config);
 
         }
 
-        public async Task<IActionResult> Index(string q = null, ushort page = 1, ushort number_of_stores_per_page = 10)
+        public async Task<IActionResult> Index(string q = null, string retailer = null, string state = null, ushort page = 1, ushort number_of_stores_per_page = 10)
         {
+            #region Search Request Setup
             AggregationDictionary v = new AggregationDictionary();
 
             var searchConfig = new SearchRequest<ESIndex_Store_Document> {
@@ -67,38 +72,50 @@ namespace tt_apps_srs.Controllers
                     }
                 }
             };
+            #endregion
+
+            #region Search Criteria Setup
+            List<QueryContainer> qryCriteria_Should = new List<QueryContainer>{
+                new MatchQuery
+                {
+                    Field = "client.urlCode.keyword",
+                    Query = _client.UrlCode
+                }
+            };
+
+            List<QueryContainer> qryCriteria_Must = new List<QueryContainer>{
+                new MatchAllQuery()
+            };
+
+            if (!String.IsNullOrEmpty(state))
+                qryCriteria_Must.Add(
+                    new MatchQuery
+                    {
+                        Field = "state.keyword",
+                        Query = state
+                    });
+            if (!String.IsNullOrEmpty(retailer))
+                qryCriteria_Must.Add(
+                    new MatchQuery{ 
+                        Field = "retailer.id.keyword", 
+                    Query = retailer
+                });
+
 
             if (!String.IsNullOrEmpty(q))
-            {
-                searchConfig.Query = new BoolQuery
-                {
-                    Must = new List<QueryContainer> 
-                    {
-                        new TermQuery 
-                        {
-                                Field = "clients.urlCode.keyword",
-                                Value = _client_url_code.ToLower()
-                        },
-                        new QueryStringQuery{
-                            DefaultField = "_all",
+                qryCriteria_Must.Add(
+                    new QueryStringQuery{
                             Query = q
                         }
-                    }
-                };
-            }
-            else
-                searchConfig.Query = new BoolQuery { 
-                                                Must = new List<QueryContainer> {
-                                                            new TermQuery {
-                                                                    Field = "clients.urlCode.keyword",
-                                                                    Value = _client_url_code.ToLower()
-                                                            }
-                                                }
-                };
+                );    
 
-                
+            searchConfig.Query = new BoolQuery{
+                Must = qryCriteria_Must,
+                Should = qryCriteria_Should
+            };
+            #endregion
 
-
+            #region Send Search Request
             var resultObject = await _es.SearchAsync<ESIndex_Store_Document>(searchConfig) ;
 
             var stores = resultObject.Documents;
@@ -110,12 +127,12 @@ namespace tt_apps_srs.Controllers
                                 .Aggregations
                                 .Terms("States")
                                 .Buckets;
-
+            #endregion
 
             ViewData["Title"] = "Stores";
-            ViewData["page"] = page;
             ViewData["agg_retailers"] = agg_retailers;
             ViewData["agg_states"] = agg_states;
+            ViewData["hits"] = resultObject.Total;
 
             return View(stores);
         }
@@ -137,7 +154,7 @@ namespace tt_apps_srs.Controllers
                 RetailerId = store.RetailerId,
                 RetailerName = store.Retailer.Name
             };
-            ClientStore cr = store.ClientStores.FirstOrDefault(q => q.ClientId == _client_id);
+            ClientStore cr = store.ClientStores.FirstOrDefault();
             try
             {
                 model.MaxOrderAmount = Convert.ToDecimal(cr.Properties.Object["MaxOrderAmount"]);
@@ -154,6 +171,12 @@ namespace tt_apps_srs.Controllers
             {
                 model.LocationNumber = model.LocationNumber;
             }
+
+            model.Orders = await _db.ClientStoreOrders
+                                        .Where( q => q.ClientStoreId == cr.Id)
+                                        .OrderByDescending( o => o.CreatedAt)
+                                        .Take(5)
+                                        .ToListAsync();
 
             ViewData["Title"] = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(store.Name.ToLower());
 
@@ -463,6 +486,8 @@ namespace tt_apps_srs.Controllers
         public string RetailerName { get; set; }
 
         public decimal? MaxOrderAmount { get; set; }
+
+        public ICollection<ClientStoreOrder> Orders {get;set;}
     }
     public class Store_AddEditModel 
     {
