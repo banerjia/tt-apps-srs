@@ -21,9 +21,11 @@ namespace tt_apps_srs.Controllers
         private string _client_url_code;
         private string _client_name;
         private readonly IClientProvider _client;
+        private readonly ElasticClient _esSvcClient;
 
         public StoresController(tt_apps_srs_db_context db, 
                                 IClientProvider client,
+                                ElasticClient esServiceClient,
                                 IConfiguration config)
         {
             _db = db;
@@ -33,6 +35,7 @@ namespace tt_apps_srs.Controllers
             _client = client;
 
             _es = new ESIndex_Store(config);
+            _esSvcClient = esServiceClient;
 
         }
 
@@ -41,7 +44,7 @@ namespace tt_apps_srs.Controllers
             #region Search Request Setup
             AggregationDictionary v = new AggregationDictionary();
 
-            var searchConfig = new SearchRequest<ESIndex_Store_Document> {
+            var searchConfig = new SearchRequest<ESIndex_Store_Document> {  
                 Size = number_of_stores_per_page,
                 From = (page-1) * number_of_stores_per_page,
                 Aggregations = new AggregationDictionary
@@ -439,7 +442,10 @@ namespace tt_apps_srs.Controllers
                                            .ThenInclude( cs => cs.Client)
                                            .Include( s => s.Retailer)
                                            .ToListAsync();
-            foreach(var storeToProcess in storesToProcess)
+            if (ESIndex)
+                _esSvcClient.DeleteIndex("tt-apps-srs-stores");
+
+            foreach (var storeToProcess in storesToProcess)
             {
                 if(forceGeocode || storeToProcess.Latitude == 0 || storeToProcess.Latitude == null)
                 {
@@ -449,7 +455,9 @@ namespace tt_apps_srs.Controllers
                     _db.Attach(storeToProcess).State = EntityState.Modified;
                 }
                 if(ESIndex)
+                {
                     _es.CreateAsAsync(storeToProcess);
+                }
             }
             
             await _db.SaveChangesAsync();

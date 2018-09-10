@@ -1,14 +1,15 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using tt_apps_srs.Models;
-using tt_apps_srs.Lib;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
+using Nest;
 using System.IO;
-using Microsoft.AspNetCore.Routing;
+using tt_apps_srs.Lib;
+using tt_apps_srs.Models;
 
 namespace tt_apps_srs
 {
@@ -38,6 +39,7 @@ namespace tt_apps_srs
 
             // Adding ES Client as db change auditor
             services.AddSingleton<IAuditor>(s => new Auditor(Configuration.GetConnectionString("DefaultESConnection")));
+            services.AddSingleton<ElasticClient>( s => new ElasticClient(new System.Uri(Configuration.GetConnectionString("DefaultESConnection"))));
             services.AddScoped<IClientProvider, ClientProvider>();
             services.AddEntityFrameworkMySql();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -76,6 +78,7 @@ namespace tt_apps_srs
                      name: "client_routes",
                      template: "{client_url_code}/{controller=Stores}/{action=Index}/{id?}");
             });
+            ESClientSeed.SeedIndex(app);
         }
     }
 }
