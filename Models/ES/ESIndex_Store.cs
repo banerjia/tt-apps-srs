@@ -124,6 +124,7 @@ namespace tt_apps_srs.Lib
                 Name = s.Client.Name,
                 CreatedAt = s.CreatedAt
             }).ToArray<ESIndex_Store_Document_Client>();
+
             await _es.IndexAsync(store_to_add,
                 i => i
                         .Index(ES_INDEX_NM)
@@ -134,31 +135,50 @@ namespace tt_apps_srs.Lib
 
         public async void RemoveAsAsync(object id)
         {
-            Guid store_id = (Guid)id;
-            await _es.DeleteAsync<ESIndex_Store_Document>(store_id);
+            Guid store_id = (Guid)id; 
+            await _es.DeleteAsync(new DeleteRequest<ESIndex_Store_Document>(
+                                            ES_INDEX_NM, 
+                                            ES_INDEX_TYP_NM,
+                                            store_id)
+                                    {
+                                        Refresh = Elasticsearch.Net.Refresh.True
+                                    }
+                                            
+            );
         }
 
-        public async Task<IReadOnlyCollection<object>> SearchAsync(object searchCriteria, uint skip = 0, ushort results_per_fetch = 10)
+        public async Task<IReadOnlyCollection<object>> SearchAsync(ISearchRequest searchCriteria, uint skip = 0, ushort results_per_fetch = 10)
         {
             IReadOnlyCollection<ESIndex_Store_Document> retval;
 
-            var searchResponse = await _es.SearchAsync<ESIndex_Store_Document>(s => s
-                                            .Query( q => q.MatchAll())
-                                            .Skip( (int)skip )
-                                            .Take(results_per_fetch)
-            );
+            ISearchRequest searchConfig = new SearchRequest<ESIndex_Store_Document>(
+                                                                            Indices.Index(ES_INDEX_NM),
+                                                                            Types.Type(ES_INDEX_TYP_NM))
+            {
+                Query = searchCriteria.Query,
+                Aggregations = searchCriteria.Aggregations,
+                From = (int)skip,
+                Size = results_per_fetch
+            };
+
+            var searchResponse = await _es.SearchAsync<ESIndex_Store_Document>(searchConfig);
 
             retval = searchResponse.Documents;
 
             return retval;
         }
-        public async Task<ISearchResponse<T>> SearchAsync<T>(ISearchRequest query) where T : class
+        public async Task<ISearchResponse<T>> SearchAsync<T>(ISearchRequest searchCriteria) where T : class
         {
-            /* 
-            query.IndicesBoost = new Dictionary<IndexName,double>(){
-                {ES_INDEX_NM, 1}
-            };*/
-            var retval = await _es.SearchAsync<T>(query);            
+            ISearchRequest searchConfig = new SearchRequest<ESIndex_Store_Document>(
+                                                                              Indices.Index(ES_INDEX_NM), 
+                                                                              Types.Type(ES_INDEX_TYP_NM)) {
+                Query = searchCriteria.Query,
+                Aggregations = searchCriteria.Aggregations,
+                From = searchCriteria.From,
+                Size = searchCriteria.Size
+            };
+            
+            var retval = await _es.SearchAsync<T>(searchConfig);            
 
             return retval;
         }

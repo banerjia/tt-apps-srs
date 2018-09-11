@@ -21,7 +21,6 @@ namespace tt_apps_srs.Controllers
         private string _client_url_code;
         private string _client_name;
         private readonly IClientProvider _client;
-        private readonly ElasticClient _esSvcClient;
 
         public StoresController(tt_apps_srs_db_context db, 
                                 IClientProvider client,
@@ -40,13 +39,7 @@ namespace tt_apps_srs.Controllers
         public async Task<IActionResult> Index(string q = null, string retailer = null, string state = null, ushort page = 1, ushort number_of_stores_per_page = 10)
         {
             #region Search Request Setup
-            AggregationDictionary v = new AggregationDictionary();
-
-            var searchConfig = new SearchRequest<ESIndex_Store_Document> { 
-                IndicesBoost = new Dictionary<IndexName, double>
-                {
-                    { "tt-apps-srs-stores", 1.4 }
-                },
+            var searchConfig = new SearchRequest<ESIndex_Store_Document>{                 
                 Size = number_of_stores_per_page,
                 From = (page-1) * number_of_stores_per_page,
                 Aggregations = new AggregationDictionary
@@ -78,6 +71,7 @@ namespace tt_apps_srs.Controllers
                 }
             };
             #endregion
+
 
             #region Search Criteria Setup
             List<QueryContainer> qryCriteria_Should = new List<QueryContainer>{

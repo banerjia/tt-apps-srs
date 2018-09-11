@@ -78,6 +78,8 @@ namespace tt_apps_srs
                      name: "client_routes",
                      template: "{client_url_code}/{controller=Stores}/{action=Index}/{id?}");
             });
+
+            // Populate CLIENT ElasticSearch Index
             ESClientSeed.SeedIndex(app);
         }
     }
