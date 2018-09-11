@@ -17,7 +17,7 @@ namespace tt_apps_srs.Lib
     {
         private readonly ElasticClient _es;
         private const string ES_INDEX_NM = "tt-apps-srs-stores";
-        private const string ES_INDEX_TYP_NM = "store";
+        private const string ES_INDEX_TYP_NM = "esindex_store_document";
 
         public ESIndex_Store(ElasticClient esSvcClient)
         {
@@ -25,66 +25,7 @@ namespace tt_apps_srs.Lib
             _es = esSvcClient;
             if(!_es.IndexExists(Indices.Index(ES_INDEX_NM)).Exists)
             {
-                _es.CreateIndexAsync(ES_INDEX_NM, c => c
-                    .Mappings( ms => ms
-                        .Map<ESIndex_Store_Document>( m => m
-                            .Properties( prop => prop
-                                .Text( s => s
-                                    .Name( e => e.Id)
-                                    .Index( false)                               
-                                )
-                                .Text( s => s 
-                                    .Name( e => e.Name)
-                                    .Analyzer("standard")
-                                )
-                                .Text( s => s
-                                    .Name( e => e.City)
-                                    .Analyzer("standard")
-                                )
-                                .Text( s => s
-                                    .Name( e => e.State)
-                                )
-                                .GeoPoint( s => s
-                                    .Name( e => e.Location)
-                                )
-                                .Object<ESIndex_Store_Document_Client>( s => s
-                                    .Name( n => n.Clients)
-                                    .Properties( props => props 
-                                        .Text( s1 => s1
-                                            .Name( e => e.Name)
-                                            .Index(false)
-                                        )
-                                        .Text( s1 => s1
-                                            .Name( e => e.UrlCode)
-                                            .Index(false)
-                                        )
-                                        .Number( s1 => s1
-                                            .Name( e => e.LocationNumber)
-                                            .Type(NumberType.Integer)
-                                        )
-                                    )
-                                )
-                                .Object<ESIndex_Store_Document_Retailer>( s => s
-                                    .Name( n => n.Retailer)
-                                    .Properties( props => props
-                                        .Text( s1 => s1
-                                            .Name( e => e.Name)
-                                            .Analyzer("standard")
-                                        )
-                                        .Text( s1 => s1
-                                            .Name( e => e.Id)
-                                            .Index(false)
-                                        )
-                                        .Text( s1 => s1
-                                            .Name( e => e.Agg_Name)
-                                            .Index(false)
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                );
+                CreateMapping(_es);
             }
             else
             {
@@ -92,8 +33,76 @@ namespace tt_apps_srs.Lib
 
         }
 
+        private void CreateMapping(ElasticClient es)
+        {
+            es.CreateIndexAsync(ES_INDEX_NM, c => c
+                    .Mappings(ms => ms
+                       .Map<ESIndex_Store_Document>(m => m
+                          .Properties(prop => prop
+                             .Text(s => s
+                                .Name(e => e.Id)
+                                .Index(false)
+                             )
+                             .Text(s => s
+                                .Name(e => e.Name)
+                                .Analyzer("standard")
+                             )
+                             .Text(s => s
+                                .Name(e => e.City)
+                                .Analyzer("standard")
+                             )
+                             .Text(s => s
+                                .Name(e => e.State)
+                             )
+                             .GeoPoint(s => s
+                                .Name(e => e.Location)
+                             )
+                             .Object<ESIndex_Store_Document_Client>(s => s
+                                .Name(n => n.Clients)
+                                .Properties(props => props
+                                   .Text(s1 => s1
+                                      .Name(e => e.Name)
+                                      .Index(false)
+                                   )
+                                   .Text(s1 => s1
+                                      .Name(e => e.UrlCode)
+                                   )
+                                   .Number(s1 => s1
+                                      .Name(e => e.LocationNumber)
+                                      .Type(NumberType.Integer)
+                                   )
+                                )
+                             )
+                             .Object<ESIndex_Store_Document_Retailer>(s => s
+                                .Name(n => n.Retailer)
+                                .Properties(props => props
+                                   .Text(s1 => s1
+                                      .Name(e => e.Name)
+                                      .Analyzer("standard")
+                                   )
+                                   .Text(s1 => s1
+                                      .Name(e => e.Id)
+                                      .Index(false)
+                                   )
+                                   .Text(s1 => s1
+                                      .Name(e => e.Agg_Name)
+                                   )
+                                )
+                             )
+                          )
+                       )
+                    )
+                ); ;
+        }
+
         public async void CreateAsAsync(object document)
         {
+
+            if (!_es.IndexExists(Indices.Index(ES_INDEX_NM)).Exists)
+            {
+                CreateMapping(_es);
+            }
+
             Store store = (Store)document;
             
             if(store.Longitude == 0 || store.Latitude == 0)
@@ -128,8 +137,6 @@ namespace tt_apps_srs.Lib
             await _es.IndexAsync(store_to_add,
                 i => i
                         .Index(ES_INDEX_NM)
-                        .Type(ES_INDEX_TYP_NM)
-                        .Refresh(Elasticsearch.Net.Refresh.True)
             );
         }
 
@@ -152,8 +159,7 @@ namespace tt_apps_srs.Lib
             IReadOnlyCollection<ESIndex_Store_Document> retval;
 
             ISearchRequest searchConfig = new SearchRequest<ESIndex_Store_Document>(
-                                                                            Indices.Index(ES_INDEX_NM),
-                                                                            Types.Type(ES_INDEX_TYP_NM))
+                                                                            Indices.Index(ES_INDEX_NM))
             {
                 Query = searchCriteria.Query,
                 Aggregations = searchCriteria.Aggregations,
@@ -170,14 +176,15 @@ namespace tt_apps_srs.Lib
         public async Task<ISearchResponse<T>> SearchAsync<T>(ISearchRequest searchCriteria) where T : class
         {
             ISearchRequest searchConfig = new SearchRequest<ESIndex_Store_Document>(
-                                                                              Indices.Index(ES_INDEX_NM), 
-                                                                              Types.Type(ES_INDEX_TYP_NM)) {
+                                                                              Indices.Index(ES_INDEX_NM)) {
                 Query = searchCriteria.Query,
                 Aggregations = searchCriteria.Aggregations,
                 From = searchCriteria.From,
-                Size = searchCriteria.Size
+                Size = searchCriteria.Size,
+                Sort = searchCriteria.Sort
             };
-            
+
+
             var retval = await _es.SearchAsync<T>(searchConfig);            
 
             return retval;

@@ -39,28 +39,28 @@ namespace tt_apps_srs.Controllers
         public async Task<IActionResult> Index(string q = null, string retailer = null, string state = null, ushort page = 1, ushort number_of_stores_per_page = 10)
         {
             #region Search Request Setup
-            var searchConfig = new SearchRequest<ESIndex_Store_Document>{                 
+            var searchConfig = new SearchRequest<ESIndex_Store_Document> {
                 Size = number_of_stores_per_page,
-                From = (page-1) * number_of_stores_per_page,
+                From = (page - 1) * number_of_stores_per_page,
                 Aggregations = new AggregationDictionary
                 {
                     {
                         "Retailers",
-                        new TermsAggregation("retailer.agg_name.keyword")
+                        new TermsAggregation("retailer.agg_Name")
                         {
                             Field = "retailer.agg_Name.keyword",
                             Order = new List<TermsOrder>
                             {
                                 new TermsOrder { Key = "_key", Order = SortOrder.Ascending}
-                                 
+
                             }
-                        }                           
+                        }
                     },
                     {
                         "States",
                         new TermsAggregation("state.keyword")
                         {
-                            Field = "state.keyword",
+                            Field = "state",
                             Order = new List<TermsOrder>
                             {
                                 new TermsOrder { Key = "_key", Order = SortOrder.Ascending}
@@ -75,6 +75,10 @@ namespace tt_apps_srs.Controllers
 
             #region Search Criteria Setup
             List<QueryContainer> qryCriteria_Should = new List<QueryContainer>{
+            };
+
+            List<QueryContainer> qryCriteria_Must = new List<QueryContainer>{
+                new MatchAllQuery(),
                 new MatchQuery
                 {
                     Field = "client.urlCode.keyword",
@@ -82,21 +86,17 @@ namespace tt_apps_srs.Controllers
                 }
             };
 
-            List<QueryContainer> qryCriteria_Must = new List<QueryContainer>{
-                new MatchAllQuery()
-            };
-
             if (!String.IsNullOrEmpty(state))
                 qryCriteria_Must.Add(
                     new MatchQuery
                     {
-                        Field = "state.keyword",
+                        Field = "state",
                         Query = state
                     });
             if (!String.IsNullOrEmpty(retailer))
                 qryCriteria_Must.Add(
                     new MatchQuery{ 
-                        Field = "retailer.id.keyword", 
+                        Field = "retailer.id", 
                     Query = retailer
                 });
 

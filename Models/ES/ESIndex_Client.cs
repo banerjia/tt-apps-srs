@@ -26,8 +26,8 @@ namespace tt_apps_srs.Lib
             if(!_es.IndexExists(Indices.Index(ES_INDEX_NM)).Exists)
             {
                 _es.CreateIndexAsync(ES_INDEX_NM, c => c
-                    .Mappings(ms => ms
-                        .Map<ESIndex_Client_Document>( m => m
+                    .Mappings(ms => ms                        
+                        .Map<ESIndex_Client_Document>( m => m                            
                             .Properties( ps => ps
                                 .Text(s => s
                                     .Name( e => e.Name))
@@ -41,7 +41,7 @@ namespace tt_apps_srs.Lib
 
                             )
                         )
-                    )
+                    )                    
                 
                 );
             }
@@ -60,8 +60,6 @@ namespace tt_apps_srs.Lib
             _es.IndexAsync( client_to_add, 
                 i => i
                     .Index(ES_INDEX_NM)
-                    .Type(ES_INDEX_TYP_NM)
-                    .Refresh(Elasticsearch.Net.Refresh.True)
             );
         }
 
@@ -70,7 +68,7 @@ namespace tt_apps_srs.Lib
             throw new NotImplementedException();
         }
 
-        public Task<IReadOnlyCollection<object>> SearchAsync(object searchCriteria, uint skip = 0, ushort results_per_fetch = 10)
+        public Task<IReadOnlyCollection<object>> SearchAsync(ISearchRequest searchCriteria, uint skip = 0, ushort results_per_fetch = 10)
         {
             throw new NotImplementedException();
         }

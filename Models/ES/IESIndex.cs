@@ -13,7 +13,7 @@ namespace tt_apps_srs.Lib
 
         void DeleteIndex();
 
-        Task<IReadOnlyCollection<object>> SearchAsync(object searchCriteria, uint skip = 0, ushort results_per_fetch = 10);
+        Task<IReadOnlyCollection<object>> SearchAsync(ISearchRequest searchCriteria, uint skip = 0, ushort results_per_fetch = 10);
         Task<ISearchResponse<T>> SearchAsync<T>(ISearchRequest query) where T:class;
 
     }
