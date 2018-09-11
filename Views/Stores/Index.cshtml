@@ -3,7 +3,7 @@
 *@
 @using System.Globalization
 @using Nest
-@model IEnumerable<tt_apps_srs.Models.ESIndex_Store_Document>
+@model IEnumerable<tt_apps_srs.Lib.ESIndex_Store_Document>
 @{
     TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
     var prms = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(Context.Request.QueryString.Value);

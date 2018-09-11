@@ -9,25 +9,86 @@ using System.IO;
 using tt_apps_srs.Lib;
 using System.Collections.ObjectModel;
 using Microsoft.Extensions.Configuration;
+using tt_apps_srs.Models;
 
-namespace tt_apps_srs.Models
+namespace tt_apps_srs.Lib
 {
     public class ESIndex_Store : IESIndex
     {
         private readonly ElasticClient _es;
+        private const string ES_INDEX_NM = "tt-apps-srs-stores";
+        private const string ES_INDEX_TYP_NM = "store";
 
-        public ESIndex_Store(IConfiguration config)
+        public ESIndex_Store(ElasticClient esSvcClient)
         {
-            var connectionString = config.GetConnectionString("DefaultESConnection");
-            var connectionConfiguration = new ConnectionSettings(new Uri(connectionString))                                      
-                                        .DefaultMappingFor<ESIndex_Store_Document>(i => i
-                                                                        .IndexName("tt-apps-srs-stores")
-                                                                        .TypeName("store")                                                                        
-                                                                        );
-
-
-            _es = new ElasticClient(connectionConfiguration);
-
+            
+            _es = esSvcClient;
+            if(!_es.IndexExists(Indices.Index(ES_INDEX_NM)).Exists)
+            {
+                _es.CreateIndexAsync(ES_INDEX_NM, c => c
+                    .Mappings( ms => ms
+                        .Map<ESIndex_Store_Document>( m => m
+                            .Properties( prop => prop
+                                .Text( s => s
+                                    .Name( e => e.Id)
+                                    .Index( false)                               
+                                )
+                                .Text( s => s 
+                                    .Name( e => e.Name)
+                                    .Analyzer("standard")
+                                )
+                                .Text( s => s
+                                    .Name( e => e.City)
+                                    .Analyzer("standard")
+                                )
+                                .Text( s => s
+                                    .Name( e => e.State)
+                                )
+                                .GeoPoint( s => s
+                                    .Name( e => e.Location)
+                                )
+                                .Object<ESIndex_Store_Document_Client>( s => s
+                                    .Name( n => n.Clients)
+                                    .Properties( props => props 
+                                        .Text( s1 => s1
+                                            .Name( e => e.Name)
+                                            .Index(false)
+                                        )
+                                        .Text( s1 => s1
+                                            .Name( e => e.UrlCode)
+                                            .Index(false)
+                                        )
+                                        .Number( s1 => s1
+                                            .Name( e => e.LocationNumber)
+                                            .Type(NumberType.Integer)
+                                        )
+                                    )
+                                )
+                                .Object<ESIndex_Store_Document_Retailer>( s => s
+                                    .Name( n => n.Retailer)
+                                    .Properties( props => props
+                                        .Text( s1 => s1
+                                            .Name( e => e.Name)
+                                            .Analyzer("standard")
+                                        )
+                                        .Text( s1 => s1
+                                            .Name( e => e.Id)
+                                            .Index(false)
+                                        )
+                                        .Text( s1 => s1
+                                            .Name( e => e.Agg_Name)
+                                            .Index(false)
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                );
+            }
+            else
+            {
+            }
 
         }
 
@@ -63,7 +124,12 @@ namespace tt_apps_srs.Models
                 Name = s.Client.Name,
                 CreatedAt = s.CreatedAt
             }).ToArray<ESIndex_Store_Document_Client>();
-            await _es.IndexDocumentAsync(store_to_add);
+            await _es.IndexAsync(store_to_add,
+                i => i
+                        .Index(ES_INDEX_NM)
+                        .Type(ES_INDEX_TYP_NM)
+                        .Refresh(Elasticsearch.Net.Refresh.True)
+            );
         }
 
         public async void RemoveAsAsync(object id)
@@ -88,16 +154,24 @@ namespace tt_apps_srs.Models
         }
         public async Task<ISearchResponse<T>> SearchAsync<T>(ISearchRequest query) where T : class
         {
-            var retval = await _es.SearchAsync<T>(query);
+            /* 
+            query.IndicesBoost = new Dictionary<IndexName,double>(){
+                {ES_INDEX_NM, 1}
+            };*/
+            var retval = await _es.SearchAsync<T>(query);            
 
             return retval;
+        }
+
+        public void DeleteIndex()
+        {
+            _es.DeleteIndexAsync(ES_INDEX_NM);
         }
     }
 
 
     public class ESIndex_Store_Document
     {
-        [Text(Analyzer = "")]
         public Guid Id {get;set;}
         public string Name { get; set; }
         public string City { get; set; }

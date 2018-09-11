@@ -16,7 +16,7 @@ namespace tt_apps_srs.Controllers
     public class StoresController : Controller
     {
         private readonly tt_apps_srs_db_context _db;
-        private readonly IESIndex _es;
+        private readonly IESIndex _esStoreClient;
         private int _client_id;
         private string _client_url_code;
         private string _client_name;
@@ -25,8 +25,7 @@ namespace tt_apps_srs.Controllers
 
         public StoresController(tt_apps_srs_db_context db, 
                                 IClientProvider client,
-                                ElasticClient esServiceClient,
-                                IConfiguration config)
+                                ElasticClient esSvcClient)
         {
             _db = db;
             _client_id = client.ClientId;
@@ -34,8 +33,7 @@ namespace tt_apps_srs.Controllers
             _client_url_code = client.UrlCode;
             _client = client;
 
-            _es = new ESIndex_Store(config);
-            _esSvcClient = esServiceClient;
+            _esStoreClient = new ESIndex_Store(esSvcClient);
 
         }
 
@@ -44,7 +42,11 @@ namespace tt_apps_srs.Controllers
             #region Search Request Setup
             AggregationDictionary v = new AggregationDictionary();
 
-            var searchConfig = new SearchRequest<ESIndex_Store_Document> {  
+            var searchConfig = new SearchRequest<ESIndex_Store_Document> { 
+                IndicesBoost = new Dictionary<IndexName, double>
+                {
+                    { "tt-apps-srs-stores", 1.4 }
+                },
                 Size = number_of_stores_per_page,
                 From = (page-1) * number_of_stores_per_page,
                 Aggregations = new AggregationDictionary
@@ -114,12 +116,12 @@ namespace tt_apps_srs.Controllers
 
             searchConfig.Query = new BoolQuery{
                 Must = qryCriteria_Must,
-                Should = qryCriteria_Should
+                Should = qryCriteria_Should                
             };
             #endregion
 
             #region Send Search Request
-            var resultObject = await _es.SearchAsync<ESIndex_Store_Document>(searchConfig) ;
+            var resultObject = await _esStoreClient.SearchAsync<ESIndex_Store_Document>(searchConfig) ;
 
             var stores = resultObject.Documents;
             var agg_retailers = resultObject
@@ -443,7 +445,7 @@ namespace tt_apps_srs.Controllers
                                            .Include( s => s.Retailer)
                                            .ToListAsync();
             if (ESIndex)
-                _esSvcClient.DeleteIndex("tt-apps-srs-stores");
+                _esStoreClient.DeleteIndex();
 
             foreach (var storeToProcess in storesToProcess)
             {
@@ -456,7 +458,7 @@ namespace tt_apps_srs.Controllers
                 }
                 if(ESIndex)
                 {
-                    _es.CreateAsAsync(storeToProcess);
+                    _esStoreClient.CreateAsAsync(storeToProcess);
                 }
             }
             
@@ -473,7 +475,7 @@ namespace tt_apps_srs.Controllers
                                            .ThenInclude( cs => cs.Client)
                                            .Include( s => s.Retailer)
                                            .FirstOrDefault( q => q.Id == storeId);
-            _es.CreateAsAsync(storeToIndex);
+            _esStoreClient.CreateAsAsync(storeToIndex);
         }
         #endregion
     }

@@ -98,12 +98,4 @@ namespace tt_apps_srs.Lib
             }
         }
     }
-
-    public class ESIndex_Client_Document
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string UrlCode { get; set; }
-
-    }
 }
