@@ -29,11 +29,11 @@ namespace tt_apps_srs.Models
         public DbSet<Client> Clients { get; set; }
         public DbSet<Retailer> Retailers { get; set; }
         public DbSet<ClientRetailer> ClientRetailers { get; set; }
+        public DbSet<ClientRetailerProduct> ClientRetailerProducts {get;set;}
         public DbSet<Store> Stores { get; set; }
         public DbSet<ClientStore> ClientStores { get; set; }
         public DbSet<ClientStoreOrder> ClientStoreOrders {get;set;}
         public DbSet<ClientStoreOrderProduct> ClientStoreOrderProducts {get;set;}
-        public DbSet<ClientProduct> ClientProducts { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<ClientUser> ClientUsers { get; set; }
 
@@ -92,6 +92,21 @@ namespace tt_apps_srs.Models
                         .WithMany(i => i.ClientRetailers)
                         .HasForeignKey(f => f.RetailerId);
                         
+            #endregion
+
+            #region ClientRetailerProduct
+
+            modelBuilder.Entity<ClientRetailerProduct>()
+                        .HasIndex( k => new { k.ClientRetailerId, k.UPC})
+                        .IsUnique(true)
+                        .HasName("IX_ClientRetailerId_UPC");
+            
+            modelBuilder.Entity<ClientRetailerProduct>()
+                        .HasOne( h1 => h1.ClientRetailer)
+                        .WithMany( m => m.ClientRetailerProducts)
+                        .HasForeignKey( f => f.ClientRetailerId);
+                        
+
             #endregion
 
             #region Store
@@ -160,7 +175,7 @@ namespace tt_apps_srs.Models
                         .HasForeignKey( f => f.ClientId);
                 
             #endregion
-
+/* 
             #region ClientProduct
             modelBuilder.Entity<ClientProduct>()
                         .HasQueryFilter( q => q.ClientId == _client.ClientId);
@@ -187,6 +202,7 @@ namespace tt_apps_srs.Models
                         .HasForeignKey(f => f.ClientId)
                         .HasConstraintName( "FK_Client_ClientProduct_ClientId");
             #endregion
+*/
 /* 
             #region ClientProductStore
             modelBuilder.Entity<ClientProductStore>()
@@ -258,7 +274,7 @@ namespace tt_apps_srs.Models
 
             #region ClientStoreOrderProduct
             modelBuilder.Entity<ClientStoreOrderProduct>()
-                        .HasKey( k => new { k.OrderId, k.ProductId})
+                        .HasKey( k => new { k.OrderId, k.ClientRetailerProductId})
                         .HasName( "PK_ClientStoreOrderProduct");
 
             modelBuilder.Entity<ClientStoreOrderProduct>()
@@ -271,9 +287,11 @@ namespace tt_apps_srs.Models
                         .HasForeignKey( f => f.OrderId);
             
             modelBuilder.Entity<ClientStoreOrderProduct>()
-                        .HasOne( h1 => h1.Product)
+                        .HasOne( h1 => h1.ClientRetailerProduct)
                         .WithMany( m => m.OrderItems)
-                        .HasForeignKey( f => f.ProductId);
+                        .HasForeignKey( f => f.ClientRetailerProductId);
+
+
             #endregion
         }
 
@@ -393,7 +411,6 @@ namespace tt_apps_srs.Models
         public virtual ICollection<ClientRetailer> ClientRetailers { get; set; }
 
         public virtual ICollection<ClientUser> ClientUsers { get; set; }
-        public virtual ICollection<ClientProduct> ClientProducts { get; set; }
     }
 
     public class Retailer
@@ -426,9 +443,30 @@ namespace tt_apps_srs.Models
         [Required]
         public bool Active { get; set; }
 
-        public  Client Client { get; set; }
+        public virtual Client Client { get; set; }
 
-        public  Retailer Retailer { get; set; }
+        public virtual Retailer Retailer { get; set; }
+
+        public virtual ICollection<ClientRetailerProduct> ClientRetailerProducts {get;set;}
+    }
+
+    public class ClientRetailerProduct
+    {
+        public int Id {get;set;}
+        public int ClientRetailerId {get;set;}
+        public string UPC {get;set;}
+
+        [MaxLength(255)]
+        [Required]
+        public string Name {get;set;}
+
+        public decimal? Cost {get;set;}
+
+        [Column(TypeName="JSON")]
+        public JsonObject<IDictionary<string, object>> Properties {get;set;}
+
+        public virtual ClientRetailer ClientRetailer {get;set;}
+        public virtual ICollection<ClientStoreOrderProduct> OrderItems {get;set;}
     }
 
     public class Store
@@ -541,7 +579,7 @@ namespace tt_apps_srs.Models
     public class ClientStoreOrderProduct
     {
         public Guid OrderId { get; set; }
-        public Guid ProductId {get; set;}
+        public int ClientRetailerProductId {get; set;}
         public uint Quantity { get; set; }
         public decimal UnitPrice { get; set; }
 
@@ -549,33 +587,12 @@ namespace tt_apps_srs.Models
         public string Status { get; set; }
 
         public virtual ClientStoreOrder Order { get; set; }
-        public virtual ClientProduct Product {get;set;}
+        public virtual ClientRetailerProduct ClientRetailerProduct {get;set;}
 
 
     }
 
-    public class ClientProduct
-    {
-        public Guid Id { get; set; }
-        public int ClientId { get; set; }
-
-        [Required, MaxLength(512)]
-        public string Name { get; set; }
-
-        public string Description { get; set; }
-
-        [DataType(DataType.Currency)]
-        public decimal? Default_Cost_Per_Unit { get; set; }
-
-        public DateTime? Start_Date { get; set; }
-        public DateTime? End_Date { get; set; }
-
-        [Required]
-        public bool Active { get; set; }
-
-        public virtual Client Client { get; set; }
-        public virtual ICollection<ClientStoreOrderProduct> OrderItems {get;set;}
-    }
+    
 
     /* 
     public class ClientProductStore : ClientProductEntity
