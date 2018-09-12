@@ -27,7 +27,7 @@ namespace tt_apps_srs.Lib
             {
                 _es.CreateIndexAsync(ES_INDEX_NM, c => c
                     .Mappings(ms => ms                        
-                        .Map<ESIndex_Client_Document>( m => m                            
+                        .Map<ESIndex_Client_Document>( ES_INDEX_TYP_NM, m => m                            
                             .Properties( ps => ps
                                 .Text(s => s
                                     .Name( e => e.Name))
@@ -60,6 +60,7 @@ namespace tt_apps_srs.Lib
             _es.IndexAsync( client_to_add, 
                 i => i
                     .Index(ES_INDEX_NM)
+                    .Type(ES_INDEX_TYP_NM)
             );
         }
 

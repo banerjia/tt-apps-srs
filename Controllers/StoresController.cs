@@ -46,9 +46,9 @@ namespace tt_apps_srs.Controllers
                 {
                     {
                         "Retailers",
-                        new TermsAggregation("retailer.agg_Name")
+                        new TermsAggregation("retailer.agg_Name.raw")
                         {
-                            Field = "retailer.agg_Name.keyword",
+                            Field = "retailer.agg_Name.raw",
                             Order = new List<TermsOrder>
                             {
                                 new TermsOrder { Key = "_key", Order = SortOrder.Ascending}
@@ -58,9 +58,9 @@ namespace tt_apps_srs.Controllers
                     },
                     {
                         "States",
-                        new TermsAggregation("state.keyword")
+                        new TermsAggregation("state.raw")
                         {
-                            Field = "state",
+                            Field = "state.raw",
                             Order = new List<TermsOrder>
                             {
                                 new TermsOrder { Key = "_key", Order = SortOrder.Ascending}
@@ -68,22 +68,28 @@ namespace tt_apps_srs.Controllers
                             }
                         }
                     }
-                }
+                },
+                Sort = new List<ISort>{
+                    new SortField{ Field = "clients.createdAt", Order= SortOrder.Descending},
+                    new SortField{ Field = "name.raw", Order= SortOrder.Ascending},
+                    new SortField{ Field = "state.raw", Order = SortOrder.Ascending}
+                }   
             };
             #endregion
 
 
             #region Search Criteria Setup
             List<QueryContainer> qryCriteria_Should = new List<QueryContainer>{
+
+                new MatchQuery
+                {
+                    Field = "client.urlCode",
+                    Query = _client.UrlCode
+                }
             };
 
             List<QueryContainer> qryCriteria_Must = new List<QueryContainer>{
-                new MatchAllQuery(),
-                new MatchQuery
-                {
-                    Field = "client.urlCode.keyword",
-                    Query = _client.UrlCode
-                }
+                new MatchAllQuery()
             };
 
             if (!String.IsNullOrEmpty(state))
@@ -110,7 +116,7 @@ namespace tt_apps_srs.Controllers
 
             searchConfig.Query = new BoolQuery{
                 Must = qryCriteria_Must,
-                Should = qryCriteria_Should                
+                Should = qryCriteria_Should           
             };
             #endregion
 

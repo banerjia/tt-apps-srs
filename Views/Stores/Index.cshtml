@@ -42,6 +42,9 @@
     </div>
 </div>
 <div class="row">
+    <div id="msg" class="col-12 alert alert-info"></div>
+</div>
+<div class="row">
     <div class="col-12">
         <form method="get">
             <div class="input-group mb-3">
@@ -272,3 +275,22 @@
         </ul>
     </div>
 </div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+        var msgContainer = document.getElementById("msg");
+        function showLocation(position)
+        {
+            msgContainer.innerHTML = "Latitude: " + position.coords.latitude + 
+                                        "<br>Longitude: " + position.coords.longitude; 
+        }
+
+        if(navigator.geolocation){
+            navigator.geolocation.getCurrentPosition(showLocation);
+        }
+        else
+            msgContainer.innerHTML = "Geolocation is not supported by this browser.";
+    </script>
+
+}

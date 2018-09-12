@@ -17,7 +17,7 @@ namespace tt_apps_srs.Lib
     {
         private readonly ElasticClient _es;
         private const string ES_INDEX_NM = "tt-apps-srs-stores";
-        private const string ES_INDEX_TYP_NM = "esindex_store_document";
+        private const string ES_INDEX_TYP_NM = "store";
 
         public ESIndex_Store(ElasticClient esSvcClient)
         {
@@ -35,9 +35,10 @@ namespace tt_apps_srs.Lib
 
         private void CreateMapping(ElasticClient es)
         {
+             
             es.CreateIndexAsync(ES_INDEX_NM, c => c
                     .Mappings(ms => ms
-                       .Map<ESIndex_Store_Document>(m => m
+                       .Map<ESIndex_Store_Document>( ES_INDEX_TYP_NM, m => m
                           .Properties(prop => prop
                              .Text(s => s
                                 .Name(e => e.Id)
@@ -46,13 +47,16 @@ namespace tt_apps_srs.Lib
                              .Text(s => s
                                 .Name(e => e.Name)
                                 .Analyzer("standard")
+                                .Fields( fs => fs.Keyword( ss => ss.Name("raw")))
                              )
                              .Text(s => s
                                 .Name(e => e.City)
                                 .Analyzer("standard")
+                                .Fields( fs => fs.Keyword( ss => ss.Name("raw")))
                              )
                              .Text(s => s
                                 .Name(e => e.State)
+                                .Fields( fs => fs.Keyword( ss => ss.Name("raw")))
                              )
                              .GeoPoint(s => s
                                 .Name(e => e.Location)
@@ -71,6 +75,9 @@ namespace tt_apps_srs.Lib
                                       .Name(e => e.LocationNumber)
                                       .Type(NumberType.Integer)
                                    )
+                                   .Date( s1 => s1
+                                    .Name ( e => e.CreatedAt)
+                                   )
                                 )
                              )
                              .Object<ESIndex_Store_Document_Retailer>(s => s
@@ -82,17 +89,22 @@ namespace tt_apps_srs.Lib
                                    )
                                    .Text(s1 => s1
                                       .Name(e => e.Id)
-                                      .Index(false)
                                    )
                                    .Text(s1 => s1
                                       .Name(e => e.Agg_Name)
+                                     .Fields( fs => fs
+                                             .Keyword( ss => ss.Name("raw")
+                                                     )
+                                            )
                                    )
                                 )
                              )
                           )
                        )
                     )
-                ); ;
+                ); 
+            
+            
         }
 
         public async void CreateAsAsync(object document)
@@ -137,6 +149,7 @@ namespace tt_apps_srs.Lib
             await _es.IndexAsync(store_to_add,
                 i => i
                         .Index(ES_INDEX_NM)
+                        .Type(ES_INDEX_TYP_NM)
             );
         }
 
@@ -159,7 +172,8 @@ namespace tt_apps_srs.Lib
             IReadOnlyCollection<ESIndex_Store_Document> retval;
 
             ISearchRequest searchConfig = new SearchRequest<ESIndex_Store_Document>(
-                                                                            Indices.Index(ES_INDEX_NM))
+                                                                            Indices.Index(ES_INDEX_NM),
+                                                                            ES_INDEX_TYP_NM)
             {
                 Query = searchCriteria.Query,
                 Aggregations = searchCriteria.Aggregations,
@@ -176,7 +190,8 @@ namespace tt_apps_srs.Lib
         public async Task<ISearchResponse<T>> SearchAsync<T>(ISearchRequest searchCriteria) where T : class
         {
             ISearchRequest searchConfig = new SearchRequest<ESIndex_Store_Document>(
-                                                                              Indices.Index(ES_INDEX_NM)) {
+                                                                              Indices.Index(ES_INDEX_NM),
+                                                                              ES_INDEX_TYP_NM) {
                 Query = searchCriteria.Query,
                 Aggregations = searchCriteria.Aggregations,
                 From = searchCriteria.From,
