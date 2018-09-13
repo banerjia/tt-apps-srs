@@ -105,6 +105,9 @@ namespace tt_apps_srs.Models
                         .HasOne( h1 => h1.ClientRetailer)
                         .WithMany( m => m.ClientRetailerProducts)
                         .HasForeignKey( f => f.ClientRetailerId);
+
+            modelBuilder.Entity<ClientRetailerProduct>()
+                        .HasQueryFilter( q => q.ClientRetailer.ClientId == _client.ClientId);
                         
 
             #endregion
@@ -465,6 +468,8 @@ namespace tt_apps_srs.Models
         public string Name {get;set;}
 
         [Column(TypeName="DECIMAL(7,2)")]
+        [DataType(DataType.Currency)]
+        [DisplayFormat(DataFormatString = "{0:c}")]
         public decimal? Cost {get;set;}
 
         [Column(TypeName="JSON")]
