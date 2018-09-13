@@ -85,7 +85,8 @@ namespace tt_apps_srs.Migrations
 
                     b.Property<int>("ClientRetailerId");
 
-                    b.Property<decimal?>("Cost");
+                    b.Property<decimal?>("Cost")
+                        .HasColumnType("DECIMAL(7,2)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -94,13 +95,17 @@ namespace tt_apps_srs.Migrations
                     b.Property<string>("Properties")
                         .HasColumnType("JSON");
 
-                    b.Property<string>("UPC");
+                    b.Property<string>("SKU")
+                        .HasMaxLength(50);
+
+                    b.Property<string>("UPC")
+                        .HasMaxLength(50);
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ClientRetailerId", "UPC")
+                    b.HasIndex("ClientRetailerId", "UPC", "SKU")
                         .IsUnique()
-                        .HasName("IX_ClientRetailerId_UPC");
+                        .HasName("IX_ClientRetailerId_UPC_SKU");
 
                     b.ToTable("ClientRetailerProducts");
                 });
@@ -186,7 +191,8 @@ namespace tt_apps_srs.Migrations
                     b.Property<string>("Status")
                         .HasMaxLength(4);
 
-                    b.Property<decimal>("UnitPrice");
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("DECIMAL(7,2)");
 
                     b.HasKey("OrderId", "ClientRetailerProductId")
                         .HasName("PK_ClientStoreOrderProduct");

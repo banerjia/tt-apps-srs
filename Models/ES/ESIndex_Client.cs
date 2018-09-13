@@ -30,13 +30,16 @@ namespace tt_apps_srs.Lib
                         .Map<ESIndex_Client_Document>( ES_INDEX_TYP_NM, m => m                            
                             .Properties( ps => ps
                                 .Text(s => s
-                                    .Name( e => e.Name))
+                                    .Name( e => e.Name)
+                                    .Index(false)
+                                )
                                 .Text( s => s
                                     .Name( e => e.UrlCode)
                                 )
                                 .Number( s => s
                                     .Name( e => e.Id)
-                                    .Type(NumberType.Integer)                                    
+                                    .Type(NumberType.Integer)  
+                                    .Index(false)                                  
                                 )
 
                             )
@@ -77,6 +80,24 @@ namespace tt_apps_srs.Lib
         public Task<ISearchResponse<T>> SearchAsync<T>(ISearchRequest query) where T : class
         {
             throw new NotImplementedException();
+        }
+
+        public ISearchResponse<T> Search<T>(ISearchRequest searchCriteria) where T : class
+        {
+            ISearchRequest searchConfig = new SearchRequest<ESIndex_Client_Document>(
+                                                                              Indices.Index(ES_INDEX_NM),
+                                                                              ES_INDEX_TYP_NM) {
+                Query = searchCriteria.Query,
+                Aggregations = searchCriteria.Aggregations,
+                From = searchCriteria.From,
+                Size = searchCriteria.Size,
+                Sort = searchCriteria.Sort
+            };
+
+
+            var retval = _es.Search<T>(searchConfig);            
+
+            return retval;
         }
 
         public void DeleteIndex()

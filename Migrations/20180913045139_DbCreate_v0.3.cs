@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace tt_apps_srs.Migrations
 {
-    public partial class Dbv0_0_2_CreateDb : Migration
+    public partial class DbCreate_v03 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -52,30 +52,6 @@ namespace tt_apps_srs.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ClientProducts",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(nullable: false),
-                    ClientId = table.Column<int>(nullable: false),
-                    Name = table.Column<string>(maxLength: 512, nullable: false),
-                    Description = table.Column<string>(nullable: true),
-                    Default_Cost_Per_Unit = table.Column<decimal>(nullable: true),
-                    Start_Date = table.Column<DateTime>(nullable: true),
-                    End_Date = table.Column<DateTime>(nullable: true),
-                    Active = table.Column<bool>(nullable: false, defaultValue: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ClientProducts", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Client_ClientProduct_ClientId",
-                        column: x => x.ClientId,
-                        principalTable: "Clients",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ClientRetailers",
                 columns: table => new
                 {
@@ -114,7 +90,7 @@ namespace tt_apps_srs.Migrations
                     Addr_Ln_2 = table.Column<string>(maxLength: 512, nullable: true),
                     City = table.Column<string>(maxLength: 128, nullable: false),
                     State = table.Column<string>(maxLength: 4, nullable: false),
-                    Zip = table.Column<string>(nullable: true),
+                    Zip = table.Column<string>(maxLength: 10, nullable: true),
                     Country = table.Column<string>(maxLength: 4, nullable: false, defaultValue: "US"),
                     Phone = table.Column<string>(maxLength: 20, nullable: true),
                     Latitude = table.Column<double>(nullable: true),
@@ -161,53 +137,25 @@ namespace tt_apps_srs.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ClientProductRetailers",
+                name: "ClientRetailerProducts",
                 columns: table => new
                 {
-                    Cost_Per_Unit = table.Column<decimal>(nullable: true),
-                    Properties = table.Column<string>(type: "JSON", nullable: true),
-                    RetailerId = table.Column<Guid>(nullable: false),
-                    ClientProductId = table.Column<Guid>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ClientRetailerId = table.Column<int>(nullable: false),
+                    UPC = table.Column<string>(maxLength: 50, nullable: true),
+                    SKU = table.Column<string>(maxLength: 50, nullable: true),
+                    Name = table.Column<string>(maxLength: 255, nullable: false),
+                    Cost = table.Column<decimal>(type: "DECIMAL(7,2)", nullable: true),
+                    Properties = table.Column<string>(type: "JSON", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ClientProductRetailer", x => new { x.RetailerId, x.ClientProductId });
+                    table.PrimaryKey("PK_ClientRetailerProducts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ClientProductRetailers_ClientProducts_ClientProductId",
-                        column: x => x.ClientProductId,
-                        principalTable: "ClientProducts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ClientProductRetailers_Retailers_RetailerId",
-                        column: x => x.RetailerId,
-                        principalTable: "Retailers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ClientProductStores",
-                columns: table => new
-                {
-                    Cost_Per_Unit = table.Column<decimal>(nullable: true),
-                    Properties = table.Column<string>(type: "JSON", nullable: true),
-                    StoreId = table.Column<Guid>(nullable: false),
-                    ClientProductId = table.Column<Guid>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ClientProductStore", x => new { x.StoreId, x.ClientProductId });
-                    table.ForeignKey(
-                        name: "FK_ClientProductStores_ClientProducts_ClientProductId",
-                        column: x => x.ClientProductId,
-                        principalTable: "ClientProducts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ClientProductStores_Stores_StoreId",
-                        column: x => x.StoreId,
-                        principalTable: "Stores",
+                        name: "FK_ClientRetailerProducts_ClientRetailers_ClientRetailerId",
+                        column: x => x.ClientRetailerId,
+                        principalTable: "ClientRetailers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -241,30 +189,63 @@ namespace tt_apps_srs.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ClientProductRetailers_ClientProductId",
-                table: "ClientProductRetailers",
-                column: "ClientProductId");
+            migrationBuilder.CreateTable(
+                name: "ClientStoreOrders",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    ClientStoreId = table.Column<int>(nullable: false),
+                    Total = table.Column<decimal>(nullable: false),
+                    Notes = table.Column<string>(nullable: true),
+                    Status = table.Column<string>(maxLength: 4, nullable: true),
+                    CreatedBy = table.Column<Guid>(nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TIMESTAMP(6)", nullable: false),
+                    VerifiedBy = table.Column<Guid>(nullable: true),
+                    VerifiedAt = table.Column<DateTime>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ClientStoreOrders", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ClientStoreOrders_ClientStores_ClientStoreId",
+                        column: x => x.ClientStoreId,
+                        principalTable: "ClientStores",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ClientStoreOrderProducts",
+                columns: table => new
+                {
+                    OrderId = table.Column<Guid>(nullable: false),
+                    ClientRetailerProductId = table.Column<int>(nullable: false),
+                    Quantity = table.Column<uint>(nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "DECIMAL(7,2)", nullable: false),
+                    Status = table.Column<string>(maxLength: 4, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ClientStoreOrderProduct", x => new { x.OrderId, x.ClientRetailerProductId });
+                    table.ForeignKey(
+                        name: "FK_ClientStoreOrderProducts_ClientRetailerProducts_ClientRetail~",
+                        column: x => x.ClientRetailerProductId,
+                        principalTable: "ClientRetailerProducts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ClientStoreOrderProducts_ClientStoreOrders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "ClientStoreOrders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ClientProduct_Active",
-                table: "ClientProducts",
-                column: "Active");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ClientProduct_Client",
-                table: "ClientProducts",
-                column: "ClientId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ClientProduct_ClientActive",
-                table: "ClientProducts",
-                columns: new[] { "Active", "ClientId" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ClientProductStores_ClientProductId",
-                table: "ClientProductStores",
-                column: "ClientProductId");
+                name: "IX_ClientRetailerId_UPC_SKU",
+                table: "ClientRetailerProducts",
+                columns: new[] { "ClientRetailerId", "UPC", "SKU" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_ClientRetailer_Active",
@@ -291,6 +272,26 @@ namespace tt_apps_srs.Migrations
                 table: "Clients",
                 column: "UrlCode",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ClientStoreOrderProducts_ClientRetailerProductId",
+                table: "ClientStoreOrderProducts",
+                column: "ClientRetailerProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ClientStoreOrderProduct_Status",
+                table: "ClientStoreOrderProducts",
+                columns: new[] { "OrderId", "Status" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ClientStoreOrders_ClientStoreId",
+                table: "ClientStoreOrders",
+                column: "ClientStoreId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ClientStoreOrder_Status",
+                table: "ClientStoreOrders",
+                column: "Status");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ClientStore_Active",
@@ -361,10 +362,19 @@ namespace tt_apps_srs.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ClientProductRetailers");
+                name: "ClientStoreOrderProducts");
 
             migrationBuilder.DropTable(
-                name: "ClientProductStores");
+                name: "ClientUsers");
+
+            migrationBuilder.DropTable(
+                name: "ClientRetailerProducts");
+
+            migrationBuilder.DropTable(
+                name: "ClientStoreOrders");
+
+            migrationBuilder.DropTable(
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "ClientRetailers");
@@ -373,19 +383,10 @@ namespace tt_apps_srs.Migrations
                 name: "ClientStores");
 
             migrationBuilder.DropTable(
-                name: "ClientUsers");
-
-            migrationBuilder.DropTable(
-                name: "ClientProducts");
+                name: "Clients");
 
             migrationBuilder.DropTable(
                 name: "Stores");
-
-            migrationBuilder.DropTable(
-                name: "Users");
-
-            migrationBuilder.DropTable(
-                name: "Clients");
 
             migrationBuilder.DropTable(
                 name: "Retailers");

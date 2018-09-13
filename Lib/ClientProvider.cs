@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Nest;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using tt_apps_srs.Models;
@@ -15,14 +16,18 @@ namespace tt_apps_srs.Lib
         private string _clientName;
         private string _clientUrlCode;
 
-        private readonly ElasticClient _esClient;
+        private readonly IESIndex _esClient;
 
-        public ClientProvider(IHttpContextAccessor accessor, IDistributedCache cache, IConfiguration config)
+        public ClientProvider(IHttpContextAccessor accessor, 
+                                IDistributedCache cache, 
+                                ElasticClient esSvcClient)
         {
+
+            _esClient = new ESIndex_Client(esSvcClient);
             
             try{
-            var host = accessor.HttpContext.Request.Path.ToString().Split('/');
-            _clientUrlCode = host[1];
+                var host = accessor.HttpContext.Request.Path.ToString().Split('/');
+                _clientUrlCode = host[1];
 
             }
             catch{
@@ -39,21 +44,20 @@ namespace tt_apps_srs.Lib
             var cacheEntry = cache.Get(_clientUrlCode + "_name");
             if(cacheEntry == null || !cacheEntry.Any())
             {
-                string connectionString = config.GetConnectionString("DefaultESConnection");
-                var connectionConfiguration = new ConnectionSettings(new Uri(connectionString))
-                                                                            .DefaultMappingFor<Client>(i => i
-                                                                            .IndexName("tt-apps-srs-clients")
-                                                                            );
 
-                _esClient = new ElasticClient(connectionConfiguration);
-
-                var esResponse = _esClient.Search<ESIndex_Client_Document>
-                ( s => s
-                        .Query( q => new TermQuery{
-                                                   Field = "UrlCode",
-                                                   Value = _clientUrlCode
-                         })
-                         .Take(1));
+                var esResponse = _esClient.Search<ESIndex_Client_Document>(
+                    new SearchRequest<ESIndex_Client_Document>{
+                        Query = new BoolQuery{
+                            Filter = new List<QueryContainer>{
+                                new TermQuery{
+                                    Field = "urlCode",
+                                    Value = _clientUrlCode
+                                }
+                            }
+                        }, 
+                        Size = 1
+                    }
+                );
 
                 var client = esResponse.Documents.First();
                 _clientName = client.Name;

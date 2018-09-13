@@ -97,9 +97,9 @@ namespace tt_apps_srs.Models
             #region ClientRetailerProduct
 
             modelBuilder.Entity<ClientRetailerProduct>()
-                        .HasIndex( k => new { k.ClientRetailerId, k.UPC})
+                        .HasIndex( k => new { k.ClientRetailerId, k.UPC, k.SKU})
                         .IsUnique(true)
-                        .HasName("IX_ClientRetailerId_UPC");
+                        .HasName("IX_ClientRetailerId_UPC_SKU");
             
             modelBuilder.Entity<ClientRetailerProduct>()
                         .HasOne( h1 => h1.ClientRetailer)
@@ -454,12 +454,17 @@ namespace tt_apps_srs.Models
     {
         public int Id {get;set;}
         public int ClientRetailerId {get;set;}
+
+        [MaxLength(50)]
         public string UPC {get;set;}
+        [MaxLength(50)]
+        public string SKU {get;set;}
 
         [MaxLength(255)]
         [Required]
         public string Name {get;set;}
 
+        [Column(TypeName="DECIMAL(7,2)")]
         public decimal? Cost {get;set;}
 
         [Column(TypeName="JSON")]
@@ -581,6 +586,8 @@ namespace tt_apps_srs.Models
         public Guid OrderId { get; set; }
         public int ClientRetailerProductId {get; set;}
         public uint Quantity { get; set; }
+
+        [Column(TypeName="DECIMAL(7,2)")]
         public decimal UnitPrice { get; set; }
 
         [MaxLength(4)]

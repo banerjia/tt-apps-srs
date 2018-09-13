@@ -204,6 +204,23 @@ namespace tt_apps_srs.Lib
 
             return retval;
         }
+        public ISearchResponse<T> Search<T>(ISearchRequest searchCriteria) where T : class
+        {
+            ISearchRequest searchConfig = new SearchRequest<ESIndex_Store_Document>(
+                                                                              Indices.Index(ES_INDEX_NM),
+                                                                              ES_INDEX_TYP_NM) {
+                Query = searchCriteria.Query,
+                Aggregations = searchCriteria.Aggregations,
+                From = searchCriteria.From,
+                Size = searchCriteria.Size,
+                Sort = searchCriteria.Sort
+            };
+
+
+            var retval = _es.Search<T>(searchConfig);            
+
+            return retval;
+        }
 
         public void DeleteIndex()
         {

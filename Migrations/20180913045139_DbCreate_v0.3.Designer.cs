@@ -9,8 +9,8 @@ using tt_apps_srs.Models;
 namespace tt_apps_srs.Migrations
 {
     [DbContext(typeof(tt_apps_srs_db_context))]
-    [Migration("20180908062207_OrdersSetup")]
-    partial class OrdersSetup
+    [Migration("20180913045139_DbCreate_v0.3")]
+    partial class DbCreate_v03
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -48,43 +48,6 @@ namespace tt_apps_srs.Migrations
                     b.ToTable("Clients");
                 });
 
-            modelBuilder.Entity("tt_apps_srs.Models.ClientProduct", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("Active")
-                        .ValueGeneratedOnAdd()
-                        .HasDefaultValue(true);
-
-                    b.Property<int>("ClientId");
-
-                    b.Property<decimal?>("Default_Cost_Per_Unit");
-
-                    b.Property<string>("Description");
-
-                    b.Property<DateTime?>("End_Date");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(512);
-
-                    b.Property<DateTime?>("Start_Date");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Active")
-                        .HasName("IX_ClientProduct_Active");
-
-                    b.HasIndex("ClientId")
-                        .HasName("IX_ClientProduct_Client");
-
-                    b.HasIndex("Active", "ClientId")
-                        .HasName("IX_ClientProduct_ClientActive");
-
-                    b.ToTable("ClientProducts");
-                });
-
             modelBuilder.Entity("tt_apps_srs.Models.ClientRetailer", b =>
                 {
                     b.Property<int>("Id")
@@ -115,6 +78,38 @@ namespace tt_apps_srs.Migrations
                         .HasName("IX_ClientRetailer_ClientActive");
 
                     b.ToTable("ClientRetailers");
+                });
+
+            modelBuilder.Entity("tt_apps_srs.Models.ClientRetailerProduct", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int>("ClientRetailerId");
+
+                    b.Property<decimal?>("Cost")
+                        .HasColumnType("DECIMAL(7,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255);
+
+                    b.Property<string>("Properties")
+                        .HasColumnType("JSON");
+
+                    b.Property<string>("SKU")
+                        .HasMaxLength(50);
+
+                    b.Property<string>("UPC")
+                        .HasMaxLength(50);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientRetailerId", "UPC", "SKU")
+                        .IsUnique()
+                        .HasName("IX_ClientRetailerId_UPC_SKU");
+
+                    b.ToTable("ClientRetailerProducts");
                 });
 
             modelBuilder.Entity("tt_apps_srs.Models.ClientStore", b =>
@@ -173,9 +168,9 @@ namespace tt_apps_srs.Migrations
 
                     b.Property<decimal>("Total");
 
-                    b.Property<Guid?>("VerifiedBy");
+                    b.Property<DateTime?>("VerifiedAt");
 
-                    b.Property<DateTime?>("VerifiedOn");
+                    b.Property<Guid?>("VerifiedBy");
 
                     b.HasKey("Id");
 
@@ -184,31 +179,32 @@ namespace tt_apps_srs.Migrations
                     b.HasIndex("Status")
                         .HasName("IX_ClientStoreOrder_Status");
 
-                    b.ToTable("ClientStoreOrder");
+                    b.ToTable("ClientStoreOrders");
                 });
 
             modelBuilder.Entity("tt_apps_srs.Models.ClientStoreOrderProduct", b =>
                 {
                     b.Property<Guid>("OrderId");
 
-                    b.Property<Guid>("ProductId");
+                    b.Property<int>("ClientRetailerProductId");
 
                     b.Property<uint>("Quantity");
 
                     b.Property<string>("Status")
                         .HasMaxLength(4);
 
-                    b.Property<decimal>("UnitPrice");
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("DECIMAL(7,2)");
 
-                    b.HasKey("OrderId", "ProductId")
+                    b.HasKey("OrderId", "ClientRetailerProductId")
                         .HasName("PK_ClientStoreOrderProduct");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("ClientRetailerProductId");
 
                     b.HasIndex("OrderId", "Status")
                         .HasName("IX_ClientStoreOrderProduct_Status");
 
-                    b.ToTable("ClientStoreOrderProduct");
+                    b.ToTable("ClientStoreOrderProducts");
                 });
 
             modelBuilder.Entity("tt_apps_srs.Models.ClientUser", b =>
@@ -349,15 +345,6 @@ namespace tt_apps_srs.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("tt_apps_srs.Models.ClientProduct", b =>
-                {
-                    b.HasOne("tt_apps_srs.Models.Client", "Client")
-                        .WithMany("ClientProducts")
-                        .HasForeignKey("ClientId")
-                        .HasConstraintName("FK_Client_ClientProduct_ClientId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
             modelBuilder.Entity("tt_apps_srs.Models.ClientRetailer", b =>
                 {
                     b.HasOne("tt_apps_srs.Models.Client", "Client")
@@ -368,6 +355,14 @@ namespace tt_apps_srs.Migrations
                     b.HasOne("tt_apps_srs.Models.Retailer", "Retailer")
                         .WithMany("ClientRetailers")
                         .HasForeignKey("RetailerId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("tt_apps_srs.Models.ClientRetailerProduct", b =>
+                {
+                    b.HasOne("tt_apps_srs.Models.ClientRetailer", "ClientRetailer")
+                        .WithMany("ClientRetailerProducts")
+                        .HasForeignKey("ClientRetailerId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
@@ -394,14 +389,14 @@ namespace tt_apps_srs.Migrations
 
             modelBuilder.Entity("tt_apps_srs.Models.ClientStoreOrderProduct", b =>
                 {
+                    b.HasOne("tt_apps_srs.Models.ClientRetailerProduct", "ClientRetailerProduct")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("ClientRetailerProductId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("tt_apps_srs.Models.ClientStoreOrder", "Order")
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("tt_apps_srs.Models.ClientProduct", "Product")
-                        .WithMany("OrderItems")
-                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
