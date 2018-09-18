@@ -468,8 +468,6 @@ namespace tt_apps_srs.Models
         public string Name {get;set;}
 
         [Column(TypeName="DECIMAL(7,2)")]
-        [DataType(DataType.Currency)]
-        [DisplayFormat(DataFormatString = "{0:c}")]
         public decimal? Cost {get;set;}
 
         [Column(TypeName="JSON")]

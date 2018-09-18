@@ -7,5 +7,7 @@
         "**/bin": true,
         "**/obj": true,
         
-    }
+    },
+    "editor.fontSize": 16,
+    "editor.fontFamily": "'Courier New', monospace"
 }
