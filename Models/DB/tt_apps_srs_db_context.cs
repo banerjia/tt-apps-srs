@@ -264,6 +264,9 @@ namespace tt_apps_srs.Models
             #endregion
 
             #region ClientStoreOrder
+
+            modelBuilder.Entity<ClientStoreOrder>()
+                        .HasQueryFilter( q => q.ClientStore.ClientId == _client.ClientId);
                         
             modelBuilder.Entity<ClientStoreOrder>()
                         .HasIndex( i => i.Status)

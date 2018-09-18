@@ -279,18 +279,19 @@
 @section Scripts
 {
     <script type="text/javascript">
-        var msgContainer = document.getElementById("msg");
-        function showLocation(position)
+        var geoLoc = null;
+
+        function recordLocation(position)
         {
-            msgContainer.innerHTML = "Latitude: " + position.coords.latitude + 
-                                        "<br>Longitude: " + position.coords.longitude; 
+            geoLoc = {
+                        lat: position.coords.latitude, 
+                        lng: position.coords.longitude
+            };
         }
 
         if(navigator.geolocation){
-            navigator.geolocation.getCurrentPosition(showLocation);
+            navigator.geolocation.getCurrentPosition(recordLocation);
         }
-        else
-            msgContainer.innerHTML = "Geolocation is not supported by this browser.";
     </script>
 
 }

@@ -1,0 +1,42 @@
+@using System.Globalization
+@using tt_apps_srs.Models
+@model IEnumerable<ClientStoreOrder>
+
+<div class="row">
+    <div class="col-12">
+        <div class="row">
+            <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
+                <table class="table table-responsive-sm border-left border-right border-bottom">
+                    <thead class="thead-light">
+                        <tr>
+                            <th scope="col">Created At</th>
+                            <th scope="col">Retailer</th>
+                            <th scope="col">Total Amount</th>
+                            <th scope="col">Created By</th>
+                            <th scope="col">Verified</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(var order in Model)
+                        {
+                            <text>
+                                <tr>
+                                    <td><a asp-action="Detail" asp-route-id="@order.ID">
+                                            @String.Format("{0:MMM dd, yyyy}", order.CreatedAt)
+                                        </a>
+                                    </td>
+                                    <td>@order.ClientStore.Store.Retailer.Name</td>
+                                    <td>@String.Format("{0:c}", 
+                                                    order.items.where( q => q.Status.Equal("actv")).Sum( s => s.Quantity * s.UnitPrice))</td>
+                                    <td>Testing Staff</td>
+                                    <td>&nbsp;</td>
+                                </tr>
+                            </text>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12"></div>
+        </div>
+    </div>
+</div>
