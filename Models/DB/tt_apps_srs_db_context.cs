@@ -460,7 +460,9 @@ namespace tt_apps_srs.Models
 
         [MaxLength(50)]
         public string UPC {get;set;}
+
         [MaxLength(50)]
+        [Column(TypeName="VARCHAR(50)")]
         public string SKU {get;set;}
 
         [MaxLength(255)]

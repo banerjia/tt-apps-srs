@@ -15,6 +15,12 @@ namespace tt_apps_srs.Lib
 {
     public class ESIndex_Product : IESIndex
     {
+        private readonly ElasticClient _es;
+
+        public ESIndex_Product(ElasticClient esSvcClient )
+        {
+            _es = esSvcClient;
+        }
         public void CreateAsAsync(object document)
         {
             throw new NotImplementedException();
@@ -48,6 +54,13 @@ namespace tt_apps_srs.Lib
 
     public class ESIndex_Product_Document
     {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public ESIndex_Store_Document_Client Client {get;set;}
+        public ESIndex_Store_Document_Retailer Retailer { get; set; }
         
+        public decimal? Cost { get; set; }
+        
+
     }
 }
