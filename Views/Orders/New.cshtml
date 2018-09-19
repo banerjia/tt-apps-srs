@@ -1,0 +1,35 @@
+@using System.Globalization
+@using tt_apps_srs.Models
+@model Order_AddEditModel
+
+<div class="row">
+    <form asp-action="Create" method="POST">
+        <input type="hidden" asp-for="ClientStoreId"/>
+        <div class="col-12">
+            <div class="row">
+                <div class="col-12"><label>Store</label> </div>
+                <div class="col-12">
+                    @Model.Store_Name<br/>
+                    <address>
+                        @Model.Store_Address
+                    </address>                
+                </div>
+            </div>
+            @{ 
+                int i = 0;
+            }
+            @foreach(var product in Model.AvailableProducts )
+            {
+                <div class="row">
+                    <input type="hidden" name="Items[@i].ClientRetailerProductId" value="@product.Id"/>
+                    <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">@product.Name</div>
+                    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">@String.Format("{0:c}", @product.Cost)</div>
+                    <div class="col-lg-2 col-md-2 col-sm-12 col-xs-12"><input name="Items[@i].Quantity"/></div>
+                </div>
+                { 
+                    i++;
+                }
+            }
+        </div>
+    </form>
+</div>

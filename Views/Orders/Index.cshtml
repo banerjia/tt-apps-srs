@@ -21,13 +21,13 @@
                         {
                             <text>
                                 <tr>
-                                    <td><a asp-action="Detail" asp-route-id="@order.ID">
+                                    <td><a asp-action="Detail" asp-route-id="@order.Id">
                                             @String.Format("{0:MMM dd, yyyy}", order.CreatedAt)
                                         </a>
                                     </td>
                                     <td>@order.ClientStore.Store.Retailer.Name</td>
                                     <td>@String.Format("{0:c}", 
-                                                    order.items.where( q => q.Status.Equal("actv")).Sum( s => s.Quantity * s.UnitPrice))</td>
+                                                    order.Items.Where( q => q.Status.Equals("actv")).Sum( s => s.Quantity * s.UnitPrice))</td>
                                     <td>Testing Staff</td>
                                     <td>&nbsp;</td>
                                 </tr>
