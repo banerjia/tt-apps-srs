@@ -71,14 +71,12 @@
                         var upc = result.codeResult.code;
                         document.querySelector('input#upc_input').value = upc;
                         var http = new XMLHttpRequest();
-                        http.open("GET", "/@_client.UrlCode/api/Products/FindProductByUPC/"+upc, true);
-                        http.onreadystatechange = function(){
+                        http.open("GET", "/@_client.UrlCode/Orders/FindProductByUPC?upc="+upc, true);
+                        http.onreadystatechange = function () {
+                            console.log(http.responseText);
                             if(http.readyState == 4 && http.status == 200){
-                                var product = JSON.parse(http.responseText);
-                                document.getElementById("product_query_result").innerHTML = 
-                                    "<strong class='text-success'>Found Product</strong><br/>" +
-                                    product.name+ "<br/>"+
-                                    "Cost: $" + product.cost;
+                                //var product = JSON.parse(http.responseText);
+                                document.getElementById("product_query_result").innerHTML = http.responseText;
                             }
                             else
                                 document.getElementById("product_query_result").innerHTML = 

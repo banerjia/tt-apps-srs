@@ -42,9 +42,6 @@
     </div>
 </div>
 <div class="row">
-    <div id="msg" class="col-12 alert alert-info"></div>
-</div>
-<div class="row">
     <div class="col-12">
         <form method="get">
             <div class="input-group mb-3">
@@ -60,9 +57,10 @@
                     <input type="text" class="form-control" placeholder="Search.." aria-label="q" name="q" aria-describedby="basic-addon1"/>
                 }
                 
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" asp-action="Index">Search</button>
-                </div>
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" asp-action="Index">Search</button>
+                        <button id="btnSearchNearMe" class="btn btn-outline-secondary" asp-action="Index">Near Me</button>
+                    </div>
                 
             </div>
         </form>
@@ -284,13 +282,23 @@
         function recordLocation(position)
         {
             geoLoc = {
-                        lat: position.coords.latitude, 
-                        lng: position.coords.longitude
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
             };
         }
 
-        if(navigator.geolocation){
-            navigator.geolocation.getCurrentPosition(recordLocation);
+
+        if (navigator.geolocation) {
+            //navigator.geolocation.getCurrentPosition(recordLocation);
+            document.getElementById("btnSearchNearMe")
+                .addEventListener("click", function (e) {
+                    e.preventDefault();
+                    navigator.geolocation.getCurrentPosition(recordLocation);
+
+                });
+        }
+        else {
+            document.getElementById("btnSearchNearMe").remove();
         }
     </script>
 
