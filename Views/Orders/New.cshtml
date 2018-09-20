@@ -1,28 +1,122 @@
 @using System.Globalization
 @using tt_apps_srs.Models
+@inject tt_apps_srs.Lib.IClientProvider _client
 @model Order_AddEditModel
 
 <div class="row">
-    <form asp-action="Create" method="POST">
-        <input type="hidden" asp-for="ClientStoreId"/>
-        <div class="col-12">
+    <div class="col-12">
+        <form asp-action="Create" method="POST">
+            <input type="hidden" asp-for="ClientStoreId"/>
             <div class="row">
-                <div class="col-12"><label>Store</label> </div>
-                <div class="col-12">
-                    @Model.Store_Name<br/>
-                    <address>
-                        @Model.Store_Address
-                    </address>                
+                <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12 order-lg-2 order-md-2">
+                    <div class="card border-primary">
+                        <div class="card-header"><span class="h4">Store</span></div>
+                        <div class="card-body">
+                            @Model.Store_Name<br/>
+                            <address>
+                                @Model.Store_Address
+                            </address>  
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12 order-lg-1 order-md-1">
+                    <div class="card card-sm border-secondary">
+                        <div class="card-header">
+                            <span class="h4">Scan a Product</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="input-field">
+                                        <label for="upc_input">UPC:</label>
+                                        <input id="upc_input" class="isbn" type="text" class="form-control readonly" readonly="readonly" />
+                                        <button type="button" class="scan btn btn-secondary">
+                                            <i class="fas fa-barcode"></i>
+                                        </button>
+                                        <input type="file" id="file" capture style="display:none"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div id="product_query_result" class="col-12">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
+
 
 @section Scripts
 {
-    <script type="text/javascript" src="~/js/quagga.min.js"></script>
+    <script type="text/javascript" src="~/js/quagga.js"></script>
     <script type="text/javascript">
+        var Quagga = window.Quagga;
+        var App = {
+            _scanner: null,
+            init: function() {
+                this.attachListeners();
+            },
+            decode: function(file) {
+                Quagga
+                    .decoder({readers: ["upc_e_reader", "upc_reader"]})
+                    .locator({halfSample: false, patchSize: 'large'})
+                    .fromSource(file, {size: 1920, length: 12})
+                    .toPromise()
+                    .then(function(result) {
+                        var upc = result.codeResult.code;
+                        document.querySelector('input#upc_input').value = upc;
+                        var http = new XMLHttpRequest();
+                        http.open("GET", "/@_client.UrlCode/api/Products/FindProductByUPC/"+upc, true);
+                        http.onreadystatechange = function(){
+                            if(http.readyState == 4 && http.status == 200){
+                                var product = JSON.parse(http.responseText);
+                                document.getElementById("product_query_result").innerHTML = 
+                                    "<strong class='text-success'>Found Product</strong><br/>" +
+                                    product.name+ "<br/>"+
+                                    "Cost: $" + product.cost;
+                            }
+                            else
+                                document.getElementById("product_query_result").innerHTML = 
+                                    "<strong class='text-danger'>Product not found</strong>";
 
+                        };
+                        http.send(null);
+
+                    })
+                    .catch(function() {
+                        document.querySelector('input#upc_input').value = "Barcode not recognized";
+                        document.getElementById("product_query_result").innerHTML = null;
+                    })
+                    .then(function() {
+                        this.attachListeners();
+                    }.bind(this));
+            },
+            attachListeners: function() {
+                var self = this,
+                    button = document.querySelector('.input-field input + button.scan'),
+                    fileInput = document.querySelector('.input-field input[type=file]');
+
+                button.addEventListener("click", function onClick(e) {
+                    e.preventDefault();
+                    button.removeEventListener("click", onClick);
+                    document.querySelector('.input-field input[type=file]').click();
+                });
+
+                fileInput.addEventListener("change", function onChange(e) {
+                    e.preventDefault();
+                    fileInput.removeEventListener("change", onChange);
+                    if (e.target.files && e.target.files.length) {
+                        self.decode(e.target.files[0]);
+                    }
+                });
+            }
+        };
+        App.init();
+ 
     </script>
 }
