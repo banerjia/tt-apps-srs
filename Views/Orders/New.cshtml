@@ -63,19 +63,17 @@
             },
             decode: function(file) {
                 Quagga
-                    .decoder({readers: ["upc_e_reader", "upc_reader"]})
-                    .locator({halfSample: false, patchSize: 'large'})
-                    .fromSource(file, {size: 1920, length: 12})
+                    .decoder({readers: ["ean_reader"]})
+                    .locator({patchSize: 'medium'})
+                    .fromSource(file, {size: 800})
                     .toPromise()
                     .then(function(result) {
                         var upc = result.codeResult.code;
                         document.querySelector('input#upc_input').value = upc;
                         var http = new XMLHttpRequest();
-                        http.open("GET", "/@_client.UrlCode/Orders/FindProductByUPC?upc="+upc, true);
+                        http.open("GET", "/@_client.UrlCode/Products/FindByUPC?upc="+upc, true);
                         http.onreadystatechange = function () {
-                            console.log(http.responseText);
                             if(http.readyState == 4 && http.status == 200){
-                                //var product = JSON.parse(http.responseText);
                                 document.getElementById("product_query_result").innerHTML = http.responseText;
                             }
                             else

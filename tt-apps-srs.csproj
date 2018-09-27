@@ -30,7 +30,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.1.2" />
     <PackageReference Include="Pomelo.JsonObject" Version="2.0.0" />
-    <PackageReference Include="ZXing.Net" Version="0.16.4" />
   </ItemGroup>
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.4" />
@@ -44,5 +43,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Migrations\20180529184843_InitialDatabase.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="zxing">
+      <HintPath>C:\Users\banerjia\Downloads\zxing.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

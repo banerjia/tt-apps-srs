@@ -1,15 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Nest;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using tt_apps_srs.Lib;
 using tt_apps_srs.Models;
+using ZXing;
+using ZXing.Common;
 
 namespace tt_apps_srs.Controllers
 {
@@ -72,33 +71,6 @@ namespace tt_apps_srs.Controllers
             return RedirectToAction("Detail", new { id = model.Id});
         }
 
-        [HttpGet]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(200)]
-        public async Task<IActionResult> FindProductByUPC(string upc)
-        {
-            ClientRetailerProduct crp = await _db.ClientRetailerProducts.FirstOrDefaultAsync(q => q.UPC == upc);
-            if (crp == null)
-                return NotFound();
-
-            Order_UPCSearchResults model = new Order_UPCSearchResults
-            {
-                ClientRetailerProductId = crp.Id,
-                Cost = crp.Cost,
-                Product_Name = crp.Name
-            };
-
-            return PartialView("_UPCSearchResult", model);
-
-        }
-
-    }
-
-    public class Order_UPCSearchResults
-    {
-        public string Product_Name { get; set; }
-        public decimal? Cost { get; set; }
-        public int ClientRetailerProductId { get; set; }
     }
 
     public class Order_AddEditModel
