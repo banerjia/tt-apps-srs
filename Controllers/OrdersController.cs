@@ -7,8 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using tt_apps_srs.Lib;
 using tt_apps_srs.Models;
-using ZXing;
-using ZXing.Common;
 
 namespace tt_apps_srs.Controllers
 {

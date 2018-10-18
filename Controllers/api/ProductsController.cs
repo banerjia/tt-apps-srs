@@ -20,15 +20,5 @@ namespace tt_apps_srs.api
             _db = db;
             _client = client;
         }
-
-        [HttpGet("{upc}")]
-        public async Task<ActionResult<ClientRetailerProduct>> FindProductByUPC(string UPC)
-        {
-            var retval = await _db.ClientRetailerProducts.FirstOrDefaultAsync( q => q.UPC == UPC);
-            if(retval == null)
-                return NotFound();
-            return retval;
-        }
     }
-
 }

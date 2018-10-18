@@ -57,7 +57,7 @@ namespace tt_apps_srs
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            if (env.IsDevelopment())
+            if (false && env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 app.UseFileServer(new FileServerOptions {
