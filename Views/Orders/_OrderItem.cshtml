@@ -1,0 +1,9 @@
+﻿@model tt_apps_srs.Models.ClientRetailerProduct
+<tr data-crp-id="@Model.Id">
+    <th>@Model.Name</th>
+    <td>@String.Format("{0:c}", Model.Cost)</td>
+    <td>
+        <input type="number" value="@(ViewData["qty"])" name="Quantity" step="1" min="1" />
+
+    </td>
+</tr>

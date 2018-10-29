@@ -4,7 +4,7 @@
         <strong class="text-success"><label>Product Found</label></strong><br/>
         @Model.Product_Name<br />
         Cost: @String.Format("{0:c}", Model.Cost) <br/>
-        <button class="btn btn-success" type="button">
+        <button class="btn btn-success" type="button" id="btnAddItem" data-crp-id="@Model.ClientRetailerProductId">
             <i class="fas fa-cart-plus"></i>
             <span class="d-none d-md-inline"> Add to order</span>
         </button>

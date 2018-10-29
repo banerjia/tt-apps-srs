@@ -51,8 +51,22 @@ namespace tt_apps_srs.Controllers
             }
 
             model.AvailableProducts = await _db.ClientRetailerProducts.ToListAsync();
+            model.Items = new List<ClientStoreOrderProduct>
+            {
+                new ClientStoreOrderProduct{ ClientRetailerProductId = 1, Quantity = 1, UnitPrice = 1},
+                new ClientStoreOrderProduct{ ClientRetailerProductId = 2, Quantity = 1, UnitPrice = 3},
+                new ClientStoreOrderProduct{ ClientRetailerProductId = 3, Quantity = 4, UnitPrice = 2},
+                new ClientStoreOrderProduct{ ClientRetailerProductId = 4, Quantity = 3, UnitPrice = 3}
+            };
             ViewData["Title"] = String.Format("{0}: New Order", _client.Name);
             return View(model);
+        }
+
+        public async Task<IActionResult> OrderItem(int id, int Quantity = 1)
+        {
+            var model = await _db.ClientRetailerProducts.FindAsync(id);
+            ViewData["qty"] = Quantity;
+            return PartialView("_OrderItem", model);
         }
 
         [HttpPost]
@@ -75,8 +89,6 @@ namespace tt_apps_srs.Controllers
     {
         public Order_AddEditModel()
         {
-            this.Items = new List<ClientStoreOrderProduct>();
-            this.AvailableProducts = new List<ClientRetailerProduct>();
         }
         public Guid? Id { get; set; }
 
@@ -90,8 +102,8 @@ namespace tt_apps_srs.Controllers
 
         public decimal? Total { get; set; }
 
-        public ICollection<ClientRetailerProduct> AvailableProducts { get; set; }
-        public ICollection<ClientStoreOrderProduct> Items { get; set; }
+        public IList<ClientRetailerProduct> AvailableProducts { get; set; }
+        public IList<ClientStoreOrderProduct> Items { get; set; }
 
         public IDictionary<string, string> Statuses {
             get{

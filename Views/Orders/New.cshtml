@@ -46,6 +46,27 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-12">
+                    <table class="table table-condensed table-striped">
+                        <caption>Order Items</caption>
+                        <thead class="bg-dark">
+                            <tr>
+                                <th>Item Id</th>
+                                <th>Cost</th>
+                                <th>Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="order_items">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <button class="btn btn-success">Save</button>
+                </div>
+            </div>
         </form>
     </div>
 </div>
@@ -75,6 +96,11 @@
                         http.onreadystatechange = function () {
                             if(http.readyState == 4 && http.status == 200){
                                 document.getElementById("product_query_result").innerHTML = http.responseText;
+                                //document.getElementById("btnAddItem").removeEventListener("click");
+                                document.getElementById("btnAddItem").addEventListener("click", function (e) {
+                                    e.preventDefault();
+                                    addItem();
+                                });
                             }
                             else
                                 document.getElementById("product_query_result").innerHTML = 
@@ -113,6 +139,28 @@
             }
         };
         App.init();
+
+        function addItem() {
+            var cRPId = parseInt(document.getElementById("btnAddItem").getAttribute("data-crp-id"));
+            var existingEntries = document.querySelectorAll("tr[data-crp-id='" + cRPId + "']");
+            if (existingEntries.length > 0) {
+                var existingEntry = existingEntries[0];
+                var currentQty = parseInt(existingEntry.querySelector("[name=Quantity]").value);
+                existingEntry.querySelector("[name=Quantity]").value = ++currentQty;
+            }
+            else {
+            var http = new XMLHttpRequest();
+            http.open("GET", "/@_client.UrlCode/Orders/OrderItem?id=" + cRPId + "&quantity=1", true);
+            http.onreadystatechange = function () {
+                if (http.readyState == 4 && http.status == 200) {
+                    document.getElementById("order_items").innerHTML += http.responseText;
+                }
+
+            };
+            http.send(null);
+
+            }
+        }
  
     </script>
 }
