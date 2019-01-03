@@ -93,9 +93,11 @@ namespace tt_apps_srs.Controllers
                 return View("New", model);
             }
 
+            model.Id = Guid.NewGuid();
+
             await _db.ClientStoreOrders.AddAsync(new ClientStoreOrder
             {
-                Id = Guid.NewGuid(),
+                Id = model.Id ?? Guid.NewGuid(),
                 ClientStoreId = model.ClientStoreId,
                 Total = model.Items.Where(q => q.Quantity > 0).Sum(s => s.Quantity * s.UnitPrice),
                 Items = model
