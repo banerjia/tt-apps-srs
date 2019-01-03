@@ -48,9 +48,9 @@
             </div>
             <div class="row">
                 <div class="col-12">
+                    <h2 class="h2">Products</h2>
                     <table class="table table-condensed table-striped">
-                        <caption>Order Items</caption>
-                        <thead class="bg-dark">
+                        <thead>
                             <tr>
                                 <th>Item Id</th>
                                 <th>Cost</th>
@@ -143,6 +143,7 @@
         function addItem() {
             var cRPId = parseInt(document.getElementById("btnAddItem").getAttribute("data-crp-id"));
             var existingEntries = document.querySelectorAll("tr[data-crp-id='" + cRPId + "']");
+            var allEntries = document.querySelectorAll("tr[data-crp-id]");
             if (existingEntries.length > 0) {
                 var existingEntry = existingEntries[0];
                 var currentQty = parseInt(existingEntry.querySelector("[name=Quantity]").value);
@@ -150,7 +151,7 @@
             }
             else {
             var http = new XMLHttpRequest();
-            http.open("GET", "/@_client.UrlCode/Orders/OrderItem?id=" + cRPId + "&quantity=1", true);
+                http.open("GET", "/@_client.UrlCode/Orders/OrderItem?id=" + cRPId + "&quantity=1&index=" + allEntries.length, true);
             http.onreadystatechange = function () {
                 if (http.readyState == 4 && http.status == 200) {
                     document.getElementById("order_items").innerHTML += http.responseText;

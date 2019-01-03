@@ -33,7 +33,21 @@ namespace tt_apps_srs.Controllers
                                     .OrderByDescending( o => o.CreatedBy)
                                     .ToListAsync();
 
+            ViewData["Title"] = String.Format("{0}: Orders", _client.Name);
+
             return View(orders);
+        }
+
+        public async Task<IActionResult> Detail(Guid id)
+        {
+            var model = await _db.ClientStoreOrders
+                                    .Include(i => i.ClientStore)
+                                        .ThenInclude(ti => ti.Store)
+                                    .Include(i => i.Items)
+                                    .ThenInclude(ti => ti.ClientRetailerProduct)
+                                    .FirstOrDefaultAsync(q => q.Id == id);
+            ViewData["Title"] = String.Format("Order for {0}", model.ClientStore.Store.Name);
+            return View(model);
         }
 
         public async Task<IActionResult> New(Guid store)
@@ -62,10 +76,11 @@ namespace tt_apps_srs.Controllers
             return View(model);
         }
 
-        public async Task<IActionResult> OrderItem(int id, int Quantity = 1)
+        public async Task<IActionResult> OrderItem(int id, int Quantity = 1,int index=0)
         {
             var model = await _db.ClientRetailerProducts.FindAsync(id);
             ViewData["qty"] = Quantity;
+            ViewData["id"] = index;
             return PartialView("_OrderItem", model);
         }
 
@@ -77,6 +92,27 @@ namespace tt_apps_srs.Controllers
             {
                 return View("New", model);
             }
+
+            await _db.ClientStoreOrders.AddAsync(new ClientStoreOrder
+            {
+                Id = Guid.NewGuid(),
+                ClientStoreId = model.ClientStoreId,
+                Total = model.Items.Where(q => q.Quantity > 0).Sum(s => s.Quantity * s.UnitPrice),
+                Items = model
+                            .Items
+                                .Where( q => q.Quantity > 0)
+                                .Select(s => new ClientStoreOrderProduct
+                                    {
+                                        ClientRetailerProductId = s.ClientRetailerProductId,
+                                        Quantity = s.Quantity,
+                                        UnitPrice = s.UnitPrice,
+                                        Status = "actv"
+                                    }).ToList(),
+                Status = "actv",
+                CreatedAt = DateTime.Now
+            });
+
+            
 
             await _db.SaveChangesAsync();
 

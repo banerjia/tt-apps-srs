@@ -1,4 +1,5 @@
-﻿@model tt_apps_srs.Controllers.Store_DetailModel
+﻿@inject tt_apps_srs.Lib.IClientProvider client
+@model tt_apps_srs.Controllers.Store_DetailModel
 @using System.Globalization
 @using tt_apps_srs.Models
 @{
@@ -110,27 +111,27 @@
                 </h2>
             </div>
             <div class="card-body">
-                @if(Model.Orders.Any())
+                @if (Model.Orders.Any())
                 {
-                    <table class="table-condensed border-sm table-striped">
+                    <table class="table border-sm table-striped">
                         <thead>
                             <tr>
                                 <th scope="col">Date</th>
-                                <th scope="col">Order Number</th>
                                 <th scope="col">Total</th>
                                 <th scope="col">Created By</th>
                                 <th scope="col">Verified On</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach(ClientStoreOrder order in Model.Orders)
+                            @foreach (ClientStoreOrder order in Model.Orders)
                             {
                                 <tr>
-                                    <th scope="row">@order.CreatedAt</th>
-                                    <td>Order# @order.Id</td>
-                                    <td>@order.Total</td>
-                                    <td>@order.CreatedBy</td>
-                                    <td>@order.VerifiedAt</td>
+                                    <th scope="row">
+                                        <a href="~/@client.UrlCode/Orders/Detail/@order.Id">@order.CreatedAt</a>
+                                    </th>
+                                    <td>@order.Total.ToString("c")</td>
+                                    <td>Test</td>
+                                    <td>@order.CreatedAt</td>
                                 </tr>
                             }
                         </tbody>
