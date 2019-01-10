@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Nest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using tt_apps_srs.Lib;
 using tt_apps_srs.Models;
+using tt_apps_srs.Models.ES;
 
 namespace tt_apps_srs.Controllers
 {
@@ -14,12 +16,16 @@ namespace tt_apps_srs.Controllers
     {
         private readonly tt_apps_srs_db_context _db;
         private readonly IClientProvider _client;
+        private readonly IESIndex _esOrderClient;
 
         public OrdersController(tt_apps_srs_db_context db, 
-                                IClientProvider client)
+                                IClientProvider client,
+                                ElasticClient esSvcClient)
         {
             _db = db;
             _client = client;
+
+            _esOrderClient = new ESIndex_Order(esSvcClient);
 
         }
 
@@ -119,6 +125,27 @@ namespace tt_apps_srs.Controllers
             await _db.SaveChangesAsync();
 
             return RedirectToAction("Detail", new { id = model.Id});
+        }
+
+        public async Task<ActionResult> ProcessOrders( bool ESIndex = true)
+        {
+            var ordersToProcess = await _db.ClientStoreOrders
+                                            .Include(i => i.ClientStore)
+                                                .ThenInclude(i => i.Client)
+                                            .Include(i => i.ClientStore)
+                                                .ThenInclude(i => i.Store)
+                                            .ToListAsync();
+            if (ESIndex)
+                _esOrderClient.DeleteIndex();
+
+            foreach (var orderToProcess in ordersToProcess)
+            {
+                _esOrderClient.CreateAsAsync(orderToProcess);
+            }
+
+            await _db.SaveChangesAsync();
+
+            return Ok();
         }
 
     }
