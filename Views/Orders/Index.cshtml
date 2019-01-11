@@ -1,6 +1,35 @@
 @using System.Globalization
-@using tt_apps_srs.Models
-@model IEnumerable<ClientStoreOrder>
+@using Nest
+@model IEnumerable<tt_apps_srs.Models.ES.ES_Order_Document>
+@{
+    TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+    var prms = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(Context.Request.QueryString.Value);
+    int page_curr = 1;
+    int page_prev = 1;
+    int page_next = 2;
+    var total_docs = Convert.ToDouble(ViewData["hits"]);
+    var page_nums = Math.Ceiling(total_docs / 10);
+
+    Dictionary<string, string> prms_route_data = new Dictionary<string, string>();
+    foreach (var item in prms.Keys)
+    {
+        if (item.Equals("page", StringComparison.OrdinalIgnoreCase))
+        {
+            page_curr = Convert.ToInt16(prms[item]);
+            continue;
+        }
+
+        if (!String.IsNullOrEmpty(prms[item].ToString()))
+        {
+            prms_route_data.Add(item, prms[item].ToString());
+        }
+
+    }
+
+    page_prev = (page_prev > 1 ? page_curr - 1 : 1);
+    page_next = (page_curr == page_nums ? page_curr : page_curr + 1);
+
+}
 
 <div class="row">
     <div class="col-12">
@@ -10,27 +39,118 @@
                     <thead class="thead-light">
                         <tr>
                             <th scope="col">Created At</th>
-                            <th scope="col">Retailer</th>
+                            <th scope="col">Store</th>
                             <th scope="col">Total Amount</th>
                             <th scope="col">Created By</th>
-                            <th scope="col">Verified</th>
                         </tr>
                     </thead>
+                    <tfoot>
+                        <tr>
+                            <td class="text-center" colspan="4">
+                                <nav aria-label="Page navingation">
+                                    <ul class="pagination">
+                                        @if (page_curr == 1)
+                                        {
+                                            <li class="page-item disabled">
+                                                <i class="fas-fa-step-backward"></i>
+                                                <span class="d-sm-none">First Page</span>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li class="page-item">
+                                                <a asp-action="Index" asp-all-route-data="prms_route_data" asp-route-page="1" class="page-link">
+                                                    <i class="fas fa-step-backward"></i>
+                                                    <span class="d-sm-none">First</span>
+                                                </a>
+                                            </li>
+                                        }
+                                        @if (page_curr == 1)
+                                        {
+                                            <li class="page-item disabled">
+                                                <i class="fas-fa-step-backward"></i>
+                                                <span class="d-sm-none">Previous</span>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li class="page-item">
+                                                <a asp-action="Index" asp-all-route-data="prms_route_data" asp-route-page="@page_prev" class="page-link">
+                                                    <i class="fas fa-backward"></i>
+                                                    <span class="d-sm-none">Previous</span>
+                                                </a>
+                                            </li>
+                                        }
+                                        @for (int pg = 1; pg <= page_nums; pg++)
+                                        {
+                                            if (pg == page_curr)
+                                            {
+                                                <text>
+                                                    <li class="page-item active"> <span class="page-link">@page_curr</span> </li>
+                                                </text>
+                                            }
+                                            else
+                                            {
+                                                <text>
+                                                    <li class="page-item">
+                                                        <a asp-action="Index" asp-all-route-data="prms_route_data" asp-route-page="@pg" class="page-link">@pg</a>
+                                                    </li>
+                                                </text>
+                                            }
+                                        }
+                                        @if (page_curr == page_nums)
+                                        {
+                                            <li class="page-item disabled">
+                                                <i class="fas-fa-forward"></i>
+                                                <span class="d-sm-none">Next</span>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li class="page-item">
+                                                <a asp-action="Index" asp-all-route-data="prms_route_data" asp-route-page="@page_next" class="page-link">
+                                                    <i class="fas fa-forward"></i>
+                                                    <span class="d-sm-none">Next</span>
+                                                </a>
+                                            </li>
+                                        }
+                                        @if (page_curr == page_nums)
+                                        {
+                                            <li class="page-item disabled">
+                                                <i class="fas-fa-step-forward"></i>
+                                                <span class="d-sm-none">Last</span>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li class="page-item">
+                                                <a asp-action="Index" asp-all-route-data="prms_route_data" asp-route-page="@page_nums" class="page-link">
+                                                    <i class="fas fa-step-forward"></i>
+                                                    <span class="d-sm-none">Last</span>
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </nav>
+                            </td>
+                        </tr>
+                    </tfoot>
                     <tbody>
-                        @foreach(var order in Model)
+                        @foreach (tt_apps_srs.Models.ES.ES_Order_Document order in Model)
                         {
                             <text>
                                 <tr>
-                                    <td><a asp-action="Detail" asp-route-id="@order.Id">
-                                            @String.Format("{0:MMM dd, yyyy}", order.CreatedAt)
+                                    <td>
+                                        <a asp-action="Detail" asp-route-id="@order.Id">
+                                            @String.Format("{0:MMM dd, yyyy}", order.Creation.CreatedAt)
                                         </a>
                                     </td>
-                                    <td>@order.ClientStore.Store.Retailer.Name</td>
-                                    <td>@String.Format("{0:c}", 
-                                                    order.Items.Where( q => q.Status.Equals("actv")).Sum( s => s.Quantity * s.UnitPrice))</td>
-                                    <td>Testing Staff</td>
-                                    <td>&nbsp;</td>
-                                </tr>
+                                    <td>@order.Store.StoreName</td>
+                                    <td>
+                                        @String.Format("{0:c}",order.Total)
+                                </td>
+                                <td>Testing Staff</td>
+                            </tr>
                             </text>
                         }
                     </tbody>

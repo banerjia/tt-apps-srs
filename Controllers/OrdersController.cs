@@ -35,23 +35,25 @@ namespace tt_apps_srs.Controllers
             #region Search Request Setup
             var searchConfig = new SearchRequest<ES_Order_Document>
             {
+                /*
                 Size = number_of_orders_per_page,
                 From = (page - 1) * number_of_orders_per_page,
                 Sort = new List<ISort>{
-                    new SortField{ Field = "creation.createdAt", Order= SortOrder.Descending}
+                    new SortField{ Field = "Creation.CreatedAt", Order= SortOrder.Descending}
                 }
+                */
             };
             #endregion
 
 
             #region Search Criteria Setup
             List<QueryContainer> qryCriteria_Should = new List<QueryContainer>{
-
+                /*
                 new MatchQuery
                 {
-                    Field = "client.urlCode",
+                    Field = "Client.UrlCode",
                     Query = _client.UrlCode
-                }
+                }*/
             };
 
             List<QueryContainer> qryCriteria_Must = new List<QueryContainer>{
@@ -75,7 +77,7 @@ namespace tt_apps_srs.Controllers
             #endregion
 
             #region Send Search Request
-            var resultObject = await _esOrderClient.SearchAsync<ESIndex_Store_Document>(searchConfig);
+            var resultObject = await _esOrderClient.SearchAsync<ES_Order_Document>(searchConfig);
 
             var orders = resultObject.Documents;
             #endregion
