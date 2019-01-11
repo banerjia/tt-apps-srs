@@ -17,6 +17,7 @@ namespace tt_apps_srs.Controllers
         private readonly tt_apps_srs_db_context _db;
         private readonly IClientProvider _client;
         private readonly IESIndex _esOrderClient;
+        public const int NUM_ORDER_PER_PAGE = 10;
 
         public OrdersController(tt_apps_srs_db_context db, 
                                 IClientProvider client,
@@ -29,15 +30,58 @@ namespace tt_apps_srs.Controllers
 
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string q = null, string retailer = null, string state = null, ushort page = 1, ushort number_of_orders_per_page = NUM_ORDER_PER_PAGE)
         {
-            var orders = await _db.ClientStoreOrders
-                                    .Include( i => i.Items)
-                                    .Include( i => i.ClientStore)
-                                        .ThenInclude( ti => ti.Store)
-                                            .ThenInclude( ti2 => ti2.Retailer)
-                                    .OrderByDescending( o => o.CreatedBy)
-                                    .ToListAsync();
+            #region Search Request Setup
+            var searchConfig = new SearchRequest<ES_Order_Document>
+            {
+                Size = number_of_orders_per_page,
+                From = (page - 1) * number_of_orders_per_page,
+                Sort = new List<ISort>{
+                    new SortField{ Field = "creation.createdAt", Order= SortOrder.Descending}
+                }
+            };
+            #endregion
+
+
+            #region Search Criteria Setup
+            List<QueryContainer> qryCriteria_Should = new List<QueryContainer>{
+
+                new MatchQuery
+                {
+                    Field = "client.urlCode",
+                    Query = _client.UrlCode
+                }
+            };
+
+            List<QueryContainer> qryCriteria_Must = new List<QueryContainer>{
+                new MatchAllQuery()
+            };
+
+
+            if (!String.IsNullOrEmpty(q))
+                qryCriteria_Must.Add(
+                    new QueryStringQuery
+                    {
+                        Query = q
+                    }
+                );
+
+            searchConfig.Query = new BoolQuery
+            {
+                Must = qryCriteria_Must,
+                Should = qryCriteria_Should
+            };
+            #endregion
+
+            #region Send Search Request
+            var resultObject = await _esOrderClient.SearchAsync<ESIndex_Store_Document>(searchConfig);
+
+            var orders = resultObject.Documents;
+            #endregion
+
+            ViewData["Title"] = "Orders";
+            ViewData["hits"] = resultObject.Total;
 
             ViewData["Title"] = String.Format("{0}: Orders", _client.Name);
 
@@ -71,13 +115,6 @@ namespace tt_apps_srs.Controllers
             }
 
             model.AvailableProducts = await _db.ClientRetailerProducts.ToListAsync();
-            model.Items = new List<ClientStoreOrderProduct>
-            {
-                new ClientStoreOrderProduct{ ClientRetailerProductId = 1, Quantity = 1, UnitPrice = 1},
-                new ClientStoreOrderProduct{ ClientRetailerProductId = 2, Quantity = 1, UnitPrice = 3},
-                new ClientStoreOrderProduct{ ClientRetailerProductId = 3, Quantity = 4, UnitPrice = 2},
-                new ClientStoreOrderProduct{ ClientRetailerProductId = 4, Quantity = 3, UnitPrice = 3}
-            };
             ViewData["Title"] = String.Format("{0}: New Order", _client.Name);
             return View(model);
         }
