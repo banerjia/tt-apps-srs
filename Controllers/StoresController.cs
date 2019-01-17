@@ -36,7 +36,13 @@ namespace tt_apps_srs.Controllers
 
         }
 
-        public async Task<IActionResult> Index(string q = null, string retailer = null, string state = null, ushort page = 1, ushort number_of_stores_per_page = 10)
+        public async Task<IActionResult> Index(string q = null, 
+                                                string retailer = null, 
+                                                string state = null, 
+                                                ushort page = 1, 
+                                                ushort number_of_stores_per_page = 10,
+                                                float? lat = null,
+                                                float? lon = null)
         {
             #region Search Request Setup
             var searchConfig = new SearchRequest<ESIndex_Store_Document> {
